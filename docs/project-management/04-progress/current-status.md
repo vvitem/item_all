@@ -3,14 +3,15 @@
 > 最后更新：2026-07-11  
 > 基线 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：本次文档 PR（创建后补充编号）
+> 关联 Issue/PR：[PR #1](https://github.com/vvitem/item_all/pull/1)
 
 # 当前项目状态
 
 ## 基线信息
 
-- 当前分支：`main`（本次变更将在独立文档分支提交）
-- 当前 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`
+- 分析基线分支：`main`
+- 文档变更分支：`docs/project-management-foundation`
+- 分析基线 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`
 - 最后更新时间：2026-07-11
 - 当前 Milestone：`M0-foundation`
 - 当前周次：第 1 周
@@ -70,7 +71,7 @@
 ## 相关 Issue / PR / Commit
 
 - Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3` — Initial commit。
-- 文档 PR：待创建。
+- 文档 PR：[PR #1](https://github.com/vvitem/item_all/pull/1)，状态 `IN_REVIEW`。
 
 ## 本周可演示结果
 
