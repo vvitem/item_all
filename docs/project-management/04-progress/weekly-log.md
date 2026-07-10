@@ -3,7 +3,7 @@
 > 最后更新：2026-07-11  
 > 基线 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：待创建
+> 关联 Issue/PR：[PR #1](https://github.com/vvitem/item_all/pull/1)
 
 # 周报日志
 
@@ -19,16 +19,18 @@
 - 确认仓库不存在 Go/Wails/React、Migration、CI 和测试。
 - 将增强版规划作为不可变 Reference 保存。
 - 建立 20 个稳定场景、50 项 Backlog、24 周计划和 6 个 ADR。
+- 创建 [PR #1](https://github.com/vvitem/item_all/pull/1)，当前处于评审阶段。
 
 ### 未完成
 
-- 文档 PR 尚待创建/评审。
+- PR #1 尚未合并，因此 `M0-001` 仍为 `IN_REVIEW`。
 - 工程骨架尚未初始化。
 
 ### 测试与证据
 
 - 基线 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`。
-- 文档生成后进行非空、目录和相对链接检查。
+- 55 个变更文件均非空，项目管理 Markdown 相对链接通过本地完整性检查。
+- 参考原文 Git Blob SHA 与本地文件一致：`2cf547356f2810327fce721ce698d108112dc6c1`。
 
 ### 风险/阻塞
 
