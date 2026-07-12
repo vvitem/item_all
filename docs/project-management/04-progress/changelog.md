@@ -1,11 +1,29 @@
 > 状态：维护中  
 > 负责人：vvitem  
-> 最后更新：2026-07-11  
-> 基线 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`  
+> 最后更新：2026-07-13  
+> 基线 Commit：`be37cfbb2bdca5a05c3303e9ea208992a8bf1721`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：待创建
+> 关联 Issue/PR：[PR #1](https://github.com/vvitem/item_all/pull/1) · [Issue #2](https://github.com/vvitem/item_all/issues/2)
 
 # 项目管理变更日志
+
+## 2026-07-13
+
+### Added
+
+- 创建 [Issue #2](https://github.com/vvitem/item_all/issues/2)，跟踪 `M0-002` 最小 Go/Wails/React 工程骨架。
+- 为 `M0-002` 记录验收标准、测试要求、范围边界和设计前置决策。
+
+### Changed
+
+- [PR #1](https://github.com/vvitem/item_all/pull/1) 已合并，`M0-001` 从 `IN_REVIEW` 更新为 `DONE`。
+- 当前基线更新为 `be37cfbb2bdca5a05c3303e9ea208992a8bf1721`。
+- `M0-foundation` 完成度更新为 `1/10`，全项目完成度更新为 `1/50`。
+- 同步当前状态、Backlog、任务追踪、实现追踪和周报。
+
+### Business Code
+
+- 未修改业务代码。
 
 ## 2026-07-11
 

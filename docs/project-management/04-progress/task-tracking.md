@@ -1,18 +1,18 @@
 > 状态：维护中  
 > 负责人：vvitem  
-> 最后更新：2026-07-11  
-> 基线 Commit：`b590887fea1e2c43e7831a48932b9be5d44ccfa3`  
+> 最后更新：2026-07-13  
+> 基线 Commit：`be37cfbb2bdca5a05c3303e9ea208992a8bf1721`  
 > 关联 Milestone：`M0-foundation → M4-beta`  
-> 关联 Issue/PR：待创建
+> 关联 Issue/PR：[PR #1](https://github.com/vvitem/item_all/pull/1) · [Issue #2](https://github.com/vvitem/item_all/issues/2)
 
 # 任务追踪
 
-本文件只展示当前进行项和全部 P0，完整 50 项见 [backlog.md](../02-roadmap/backlog.md)。
+本文件只展示当前活动项和全部 P0，完整 50 项见 [backlog.md](../02-roadmap/backlog.md)。
 
 | ID | Milestone | 任务 | 优先级 | 状态 | 依赖 | 验收 | Issue/PR | 下一步 |
 |---|---|---|---|---|---|---|---|---|
-| M0-001 | M0-foundation | 建立项目管理、ADR、进度和交付文档体系 | P0 | IN_REVIEW | 无 | 所有文件非空、状态基于真实仓库、创建 PR | 本次 PR | 评审并合并 |
-| M0-002 | M0-foundation | 初始化 Go/Wails/React 单仓 | P0 | NOT_STARTED | M0-001 | Windows 本地可启动空壳，版本信息可见 | 待创建 | 编写初始化设计与最小 PR |
+| M0-001 | M0-foundation | 建立项目管理、ADR、进度和交付文档体系 | P0 | DONE | 无 | 所有文件非空、状态基于真实仓库、PR 已合并 | [PR #1](https://github.com/vvitem/item_all/pull/1) / `be37cfb` | 持续维护 |
+| M0-002 | M0-foundation | 初始化 Go/Wails/React 单仓 | P0 | READY | M0-001 | Windows 本地可启动空壳，版本信息可见 | [Issue #2](https://github.com/vvitem/item_all/issues/2) | 确认名称和 Module Path，完成设计 Spec |
 | M0-003 | M0-foundation | 建立 Go/前端 lint、test、Windows build、secret scan | P0 | NOT_STARTED | M0-002 | PR 必须通过全部门禁 | 待创建 | 定义工具版本 |
 | M0-004 | M0-foundation | 建立 SQLite WAL、Migration 和 Repository 骨架 | P0 | NOT_STARTED | M0-002 | 首次启动迁移成功；重复运行幂等 | 待创建 | 确定 migration 库 |
 | M0-006 | M0-foundation | 实现 CredentialRef 与 OS Keychain 接口 | P0 | NOT_STARTED | M0-004 | SQLite/日志无明文；Keychain 失败 fail-closed | 待创建 | 完成 Windows PoC |
@@ -55,8 +55,9 @@
 
 ## 状态摘要
 
-- `DONE`: 0
-- `IN_REVIEW`: 1
+- `DONE`: 1
+- `READY`: 1
+- `IN_REVIEW`: 0
 - `IN_PROGRESS`: 0
 - `BLOCKED`: 0
-- `NOT_STARTED`: 49
+- `NOT_STARTED`: 48
