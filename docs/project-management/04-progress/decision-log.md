@@ -48,7 +48,7 @@
 
 - **日期**：2026-07-13
 - **状态**：已确认
-- **背景**：`M0-002` 需要在创建 `go.mod` 和 Wails 配置前冻结产品名称、Module Path、Application ID 与工程结构。
+- **背景**：`M0-002` 需要在创建 `go.mod` 和 Wails 配置前冻结产品名称、Module Path、规范化应用标识与工程结构。
 - **问题**：选择哪套产品身份和桌面工程布局，才能兼顾单人开发效率与后续模块扩展。
 - **可选方案**：
   1. `ItemAll` + Wails 标准根目录结构。
@@ -57,10 +57,11 @@
 - **最终选择**：
   - 产品名称：`ItemAll`。
   - Go Module：`github.com/vvitem/item_all`。
-  - Wails Application ID：`com.vvitem.itemall`。
+  - 规范化应用标识：`com.vvitem.itemall`。
   - 工程结构：根目录保留 `main.go`、`app.go`、`wails.json`，业务模块后续进入 `internal/*`。
 - **选择理由**：与 Wails CLI 默认工作方式一致，降低单人和 Codex 辅助开发的脚手架复杂度；当前没有多应用 Monorepo 的实际需求。
-- **影响范围**：`go.mod`、`wails.json`、构建产物名称、前端展示名称、后续安装器标识。
+- **影响范围**：`go.mod`、构建产物名称、前端展示名称、后续安装器和平台清单标识。
+- **配置说明**：Wails v2 的 `wails.json` 没有通用 `applicationID` 字段，不得写入虚构配置键；后续打包任务将规范化标识映射到各平台 Manifest 或 Bundle 配置。
 - **需要修改的文档**：`open-questions.md`、M0-002 Design Spec、后续实现追踪与发布配置。
 - **需要新增的任务**：无需新增 Backlog；由 `M0-002` 落地。
-- **后续验证方式**：Windows 本地执行 `wails dev` 与 `wails build`，确认生成应用名称和标识与本决策一致。
+- **后续验证方式**：Windows 本地执行 `wails dev` 与 `wails build`，确认应用名称、构建信息和平台配置符合本决策。
