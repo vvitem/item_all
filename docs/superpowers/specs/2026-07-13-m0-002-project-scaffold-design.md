@@ -14,7 +14,7 @@
 1. 安装依赖并执行开发启动。
 2. 编译 Go 后端和 React/TypeScript 前端。
 3. 打开 Wails 桌面窗口。
-4. 在页面中看到应用名称、版本、Commit、构建时间、Go Runtime 和运行状态。
+4. 在页面中看到应用名称、规范化应用标识、版本、Commit、构建时间、Go Runtime 和运行状态。
 5. 执行 Go 与前端基础测试。
 
 本任务只建立工程底座，不实现 SSH、SFTP、数据库、AI、Operation Bus、SQLite 业务表、凭据存储或发布安装器。
@@ -27,11 +27,13 @@
 | 产品定位 | `Local-first SafeOps` |
 | GitHub 仓库 | `github.com/vvitem/item_all` |
 | Go Module | `github.com/vvitem/item_all` |
-| Wails Application ID | `com.vvitem.itemall` |
+| 规范化应用标识 | `com.vvitem.itemall` |
 | 首发平台 | Windows 正式支持 |
 | 预览平台 | macOS、Linux 社区预览 |
 
-## 3. 方案比较
+`com.vvitem.itemall` 是跨平台规范化标识。Wails v2 的 `wails.json` 没有通用 `applicationID` 字段，因此 M0-002 不写入不存在的配置键；后续安装器、MSIX、macOS Bundle 或签名任务必须将该标识映射到对应的平台清单。
+
+## 3. 方案比较与选择
 
 ### 3.1 方案 A：Wails 标准根目录结构
 
@@ -48,16 +50,9 @@ item_all/
     └── buildinfo/
 ```
 
-优点：
+优点：与 Wails CLI 和官方模板的默认行为一致，`wails dev`、`wails build`、绑定生成和平台资源路径最直接，对单人开发和 Codex 辅助最友好。
 
-- 与 Wails CLI 和官方模板的默认行为一致。
-- `wails dev`、`wails build`、绑定生成和平台资源路径最直接。
-- 对单人开发和 Codex 辅助最友好。
-- 后续业务仍可全部收敛到 `internal/*`。
-
-缺点：
-
-- 根目录存在少量 Composition Root 文件。
+缺点：根目录存在少量 Composition Root 文件。
 
 ### 3.2 方案 B：`cmd/desktop`
 
@@ -71,11 +66,11 @@ item_all/
 
 缺点：六个月范围内这些产品都不建设，会引入不必要的工作区、构建和依赖管理复杂度。
 
-### 3.4 选择
+### 3.4 最终选择
 
 采用 **方案 A：Wails 标准根目录结构**。
 
-原因：当前目标是单桌面应用、单人开发、快速形成可验证垂直切片。未来需要增加 CLI 时，可在不移动现有桌面 Composition Root 的前提下新增 `cmd/cli`，不需要现在预付 Monorepo 成本。
+当前目标是单桌面应用、单人开发、快速形成可验证垂直切片。未来需要增加 CLI 时，可以新增 `cmd/cli`，不需要现在预付 Monorepo 成本。
 
 ## 4. 目标目录结构
 
@@ -86,11 +81,11 @@ item_all/
 ├── go.mod
 ├── go.sum
 ├── wails.json
-├── Makefile                        # 跨平台命令说明的统一入口；Windows 可直接使用底层命令
+├── Makefile                        # 常用命令别名，不是唯一入口
 ├── .gitignore
 ├── .nvmrc                          # Node 24 大版本
 ├── build/
-│   ├── appicon.png                 # 临时应用图标，可由 Wails 模板生成
+│   ├── appicon.png                 # Wails 模板图标，后续独立替换
 │   ├── darwin/
 │   ├── linux/
 │   └── windows/
@@ -107,7 +102,7 @@ item_all/
 │   │   ├── main.tsx
 │   │   ├── styles.css
 │   │   └── types.ts
-│   └── wailsjs/                    # Wails 自动生成绑定，不手工编辑
+│   └── wailsjs/                    # Wails 生成，不手工编辑
 └── internal/
     └── buildinfo/
         ├── info.go
@@ -131,15 +126,13 @@ item_all/
 | Node.js | Node 24 LTS，大版本由 `.nvmrc` 固定 |
 | pnpm | pnpm 11.x，`packageManager` 写入精确版本 |
 | React | 使用脚手架生成时的稳定精确版本并提交锁文件 |
-| TypeScript | 精确版本写入 `devDependencies` |
-| Vite | 精确版本写入 `devDependencies` |
-| Vitest | 精确版本写入 `devDependencies` |
+| TypeScript、Vite、Vitest | 精确版本写入 `devDependencies` |
 
 版本规则：
 
 1. `go.mod`、`package.json` 和 `pnpm-lock.yaml` 必须提交。
 2. 禁止在项目配置中使用 `latest`、`*` 或无上限范围。
-3. CLI 安装说明可引用具体版本；不得要求开发者长期追随 `@latest`。
+3. CLI 安装说明使用具体版本，不要求开发者长期追随 `@latest`。
 4. 依赖升级由独立 PR 完成，不与功能 PR 混合。
 
 ## 6. 后端设计
@@ -150,24 +143,25 @@ item_all/
 
 ```go
 type Info struct {
-    Name      string `json:"name"`
-    Version   string `json:"version"`
-    Commit    string `json:"commit"`
-    BuildTime string `json:"buildTime"`
-    GoVersion string `json:"goVersion"`
-    OS        string `json:"os"`
-    Arch      string `json:"arch"`
+    Name          string `json:"name"`
+    ApplicationID string `json:"applicationId"`
+    Version       string `json:"version"`
+    Commit        string `json:"commit"`
+    BuildTime     string `json:"buildTime"`
+    GoVersion     string `json:"goVersion"`
+    OS            string `json:"os"`
+    Arch          string `json:"arch"`
 }
 ```
 
 默认值：
 
 - `Name`: `ItemAll`
+- `ApplicationID`: `com.vvitem.itemall`
 - `Version`: `dev`
 - `Commit`: `unknown`
 - `BuildTime`: `unknown`
-- `GoVersion`: 运行时读取
-- `OS`/`Arch`: 运行时读取
+- `GoVersion`、`OS`、`Arch`: 运行时读取
 
 `Version`、`Commit` 和 `BuildTime` 通过 `-ldflags -X` 注入。开发模式没有注入时必须返回稳定默认值，不能报错或返回空字符串。
 
@@ -179,17 +173,18 @@ type Info struct {
 func (a *App) GetAppInfo() AppInfo
 ```
 
-`AppInfo` 是面向前端的 DTO：
+面向前端的 DTO：
 
 ```go
 type AppInfo struct {
-    Name      string `json:"name"`
-    Tagline   string `json:"tagline"`
-    Version   string `json:"version"`
-    Commit    string `json:"commit"`
-    BuildTime string `json:"buildTime"`
-    Runtime   string `json:"runtime"`
-    Status    string `json:"status"`
+    Name          string `json:"name"`
+    ApplicationID string `json:"applicationId"`
+    Tagline       string `json:"tagline"`
+    Version       string `json:"version"`
+    Commit        string `json:"commit"`
+    BuildTime     string `json:"buildTime"`
+    Runtime       string `json:"runtime"`
+    Status        string `json:"status"`
 }
 ```
 
@@ -208,19 +203,17 @@ M0-002 不增加健康检查、文件系统访问、环境变量读取或网络�
 
 - ItemAll
 - Local-first SafeOps
+- `com.vvitem.itemall`
 - 应用运行状态
-- Version
-- Commit
-- Build Time
-- Go Runtime / OS / Arch
+- Version、Commit、Build Time
+- Go Runtime、OS、Arch
 
 ### 7.2 状态模型
-
-前端只有三种显示状态：
 
 ```text
 LOADING → READY
 LOADING → ERROR
+ERROR → LOADING（用户重新读取）
 ```
 
 - `LOADING`：等待 `GetAppInfo()`。
@@ -234,7 +227,7 @@ LOADING → ERROR
 - 捕获 Wails Binding 调用异常。
 - 页面不得无限停留在 Loading。
 - UI 只显示安全的通用错误，不展示堆栈、路径或环境变量。
-- 详细异常仅在开发控制台中记录；M0-002 不建设持久日志系统。
+- 详细异常只写开发控制台；M0-002 不建设持久日志系统。
 
 ## 8. 数据流
 
@@ -251,29 +244,37 @@ sequenceDiagram
     UI-->>UI: READY 或 ERROR
 ```
 
-该数据流是只读的，不经过 Operation Bus。原因是构建元数据查询不属于资产操作、远程执行或持久化业务行为。Operation Bus 从 `M0-007` 开始成为所有运维能力的唯一执行入口。
+该数据流是只读本地元数据查询，不经过 Operation Bus。它不涉及资产操作、远程执行、凭据或业务持久化。Operation Bus 从 `M0-007` 开始成为所有运维能力的唯一执行入口。
 
-## 9. Wails 配置
+## 9. Wails v2 配置
 
-`wails.json` 至少固定：
+`wails.json` 只使用官方 Project Config 支持的字段，至少固定：
 
 - `name`: `ItemAll`
 - `outputfilename`: `ItemAll`
+- `frontend:dir`: `frontend`
 - `frontend:install`: `pnpm install --frozen-lockfile`
 - `frontend:build`: `pnpm build`
 - `frontend:dev:watcher`: `pnpm dev`
-- Application ID：`com.vvitem.itemall`
+- `frontend:dev:serverUrl`: `auto`
+- `info.companyName`: `vvitem`
+- `info.productName`: `ItemAll`
+- `info.productVersion`: 初始开发版本
+- `info.comments`: `Local-first SafeOps`
 
-窗口设计保持最小：
+`com.vvitem.itemall` 不写入 `wails.json` 的虚构字段。M0-002 将它保存在 `internal/buildinfo` 和设计决策中；平台打包任务负责写入对应 Manifest 或 Bundle 配置。
 
-- 默认宽度约 1024。
-- 默认高度约 700。
-- 最小宽高防止内容完全不可用。
-- 不实现自定义无边框窗口、托盘、开机启动或多窗口。
+窗口配置：
+
+- 默认宽度：1024。
+- 默认高度：700。
+- 最小宽度：800。
+- 最小高度：560。
+- 不实现无边框窗口、托盘、开机启动或多窗口。
 
 ## 10. 开发与构建命令
 
-必须支持以下可复现命令：
+必须支持以下命令：
 
 ```text
 go test ./...
@@ -286,7 +287,7 @@ wails dev
 wails build
 ```
 
-`Makefile` 只提供常用命令别名，不得成为唯一可运行入口。Windows 用户即使没有 `make`，也能按 README 中的底层命令完成开发和验证。
+`Makefile` 只提供命令别名。Windows 用户即使没有 `make`，也能按 README 中的底层命令完成开发和验证。
 
 ## 11. 测试设计
 
@@ -295,7 +296,8 @@ wails build
 `internal/buildinfo/info_test.go` 至少验证：
 
 - 无 ldflags 时返回稳定默认值。
-- Name 永远为 `ItemAll`。
+- Name 为 `ItemAll`。
+- ApplicationID 为 `com.vvitem.itemall`。
 - Version、Commit、BuildTime 不为空。
 - Runtime 包含有效 Go 版本、OS 和 Arch。
 
@@ -304,7 +306,7 @@ wails build
 `App.test.tsx` 至少验证：
 
 - 初始显示 Loading。
-- Binding 成功时展示 ItemAll 和版本信息。
+- Binding 成功时展示 ItemAll、Application ID 和版本信息。
 - Binding 失败时显示错误状态。
 - 点击重新读取后再次调用 Binding。
 
@@ -322,7 +324,7 @@ M0-002 只记录本地验证步骤；GitHub Actions 门禁属于 `M0-003`。
 - 不读取或显示环境变量。
 - 不引入 Token、API Key、凭据示例或 `.env`。
 - 不访问网络。
-- 不持久化任何用户数据。
+- 不持久化用户数据。
 - 不加载远程脚本、远程字体或 CDN 资源。
 - 前端错误不得包含本地绝对路径和堆栈。
 - 锁文件必须提交，降低供应链漂移。
@@ -347,10 +349,10 @@ M0-002 只记录本地验证步骤；GitHub Actions 门禁属于 `M0-003`。
 3. Windows 本地 `wails dev` 可启动。
 4. Windows `wails build` 可生成可运行应用。
 5. 页面可展示全部 AppInfo。
-6. Loading、Ready、Error 三种状态可验证。
+6. Loading、Ready、Error 和重试流程可验证。
 7. Go 与前端测试、类型检查、Lint、生产构建全部通过。
 8. 所有依赖均有精确版本或锁文件证据。
-9. 不包含任何范围外业务能力。
+9. 不包含范围外业务能力。
 10. 同步更新项目进度文档，并关联实现 PR、Commit 和验证记录。
 
 ## 15. 后续衔接
