@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible defect
+title: "[Bug] "
+labels: []
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: 操作系统
+    validations:
+      required: true
+  - type: textarea
+    id: trace
+    attributes:
+      label: TraceID 与脱敏日志
+      description: 禁止粘贴凭据、DSN、私钥或原始敏感数据

@@ -1,0 +1,40 @@
+name: Engineering task
+description: Create a roadmap-backed engineering task
+title: "[M0-000] "
+labels: []
+body:
+  - type: input
+    id: task_id
+    attributes:
+      label: Task ID
+      placeholder: M0-000
+    validations:
+      required: true
+  - type: input
+    id: scenario
+    attributes:
+      label: Scenario / Requirement
+      placeholder: SSH-01, DB-05, Operation Bus
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 可演示用户结果
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 包含正常、失败、取消、安全和文档同步
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: 设计、代码与测试路径
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: 风险与明确不做
