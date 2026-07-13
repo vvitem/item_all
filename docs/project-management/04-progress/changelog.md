@@ -1,13 +1,44 @@
 > 状态：维护中  
 > 负责人：vvitem  
 > 最后更新：2026-07-13  
-> 基线 Commit：`be37cfbb2bdca5a05c3303e9ea208992a8bf1721`  
+> 基线 Commit：`47ad2e428a7db862195b871abbea42ac4c4e930d`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：[PR #1](https://github.com/vvitem/item_all/pull/1) · [Issue #2](https://github.com/vvitem/item_all/issues/2)
+> 关联 Issue/PR：[Issue #2](https://github.com/vvitem/item_all/issues/2) · [PR #6](https://github.com/vvitem/item_all/pull/6)
 
 # 项目管理变更日志
 
-## 2026-07-13
+## 2026-07-13 — M0-002 实现评审
+
+### Added
+
+- 新增 ItemAll Go 1.26.5 + Wails v2.13.0 标准根目录工程。
+- 新增只读 `GetAppInfo()` Binding 和 `internal/buildinfo`。
+- 新增 React/TypeScript/Vite 页面及 Loading、Ready、Error、Retry 测试。
+- 新增同步 Binding 抛错回归测试，验证异常文本和本地路径不会进入用户界面。
+- 新增官方 Wails 平台资源、Go/pnpm 锁文件、中文开发说明和 Makefile。
+- 新增 pnpm 供应链策略，仅批准 `esbuild` 安装构建脚本。
+
+### Changed
+
+- `M0-002` 从 `READY` 更新为 `IN_REVIEW`，关联 [PR #6](https://github.com/vvitem/item_all/pull/6)。
+- 项目状态更新为 `DONE=1`、`IN_REVIEW=1`、`NOT_STARTED=48`。
+- 实现路径由建议路径更新为 `main.go`、`app.go`、`internal/buildinfo`、`frontend/src` 和 `build`。
+- Binding 调用统一进入 Promise 链，同步抛错与异步 rejection 均进入安全错误状态。
+
+### Validation
+
+- 5 个前端测试、TypeScript、ESLint、Vite build、Go tests、race、Binding 漂移检查通过。
+- Windows production build、EXE 启动烟测和 `wails dev` 就绪烟测通过。
+- 精确依赖、秘密、范围外能力和远程前端资源扫描通过。
+- 同步异常测试完成 RED→GREEN；最终前端验证 Run `29244941752` 通过。
+- 临时验证 Workflow 已删除；正式 CI 留在 M0-003。
+
+### Business Code
+
+- 新增最小桌面工程骨架和构建信息展示。
+- 未新增 SSH、数据库、SQLite 业务表、AI、Operation Bus、云服务、凭据或遥测。
+
+## 2026-07-13 — M0-001 状态同步
 
 ### Added
 

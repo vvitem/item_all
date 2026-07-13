@@ -1,0 +1,19 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "ItemAll",
+  "outputfilename": "ItemAll",
+  "frontend:install": "pnpm install --frozen-lockfile",
+  "frontend:build": "pnpm run build",
+  "frontend:dev:watcher": "pnpm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "info": {
+    "companyName": "vvitem",
+    "productName": "ItemAll",
+    "productVersion": "0.0.0-dev",
+    "copyright": "Copyright © 2026 vvitem",
+    "comments": "Local-first SafeOps desktop workspace"
+  },
+  "author": {
+    "name": "vvitem"
+  }
+}

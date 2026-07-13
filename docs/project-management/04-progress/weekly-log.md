@@ -1,9 +1,9 @@
 > 状态：维护中  
 > 负责人：vvitem  
 > 最后更新：2026-07-13  
-> 基线 Commit：`be37cfbb2bdca5a05c3303e9ea208992a8bf1721`  
+> 基线 Commit：`47ad2e428a7db862195b871abbea42ac4c4e930d`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：[PR #1](https://github.com/vvitem/item_all/pull/1) · [Issue #2](https://github.com/vvitem/item_all/issues/2)
+> 关联 Issue/PR：[Issue #2](https://github.com/vvitem/item_all/issues/2) · [PR #6](https://github.com/vvitem/item_all/pull/6)
 
 # 周报日志
 
@@ -11,37 +11,45 @@
 
 ### 目标
 
-完成文档基线合并后的状态同步，并进入 `M0-002` 最小工程骨架设计。
+冻结 ItemAll 工程身份，完成 `M0-002` 设计、实现计划和最小 Go/Wails/React 桌面骨架。
 
 ### 已完成
 
-- [PR #1](https://github.com/vvitem/item_all/pull/1) 已通过 squash 合并。
-- `M0-001` 已依据合并 Commit `be37cfbb2bdca5a05c3303e9ea208992a8bf1721` 转为 `DONE`。
-- 创建 [Issue #2](https://github.com/vvitem/item_all/issues/2)，记录 `M0-002` 的边界、验收标准、测试和明确不做事项。
-- `M0-002` 转为 `READY`，全项目状态为 `DONE=1`、`READY=1`、`NOT_STARTED=48`。
+- 确认产品名称 `ItemAll`、Go Module `github.com/vvitem/item_all` 和规范化应用标识 `com.vvitem.itemall`。
+- [PR #4](https://github.com/vvitem/item_all/pull/4) 合并 M0-002 设计；[PR #5](https://github.com/vvitem/item_all/pull/5) 合并实现计划。
+- 建立 Go 1.26.5、Wails v2.13.0、Node 24.18.0、pnpm 11.12.0 工程骨架。
+- 实现只读 `GetAppInfo()`、构建元数据和 React Loading/Ready/Error/Retry 页面。
+- 提交官方 Wails 平台资源、精确依赖锁文件、中文开发文档和可选 Makefile。
+- 代码审查补充同步 Binding 异常回归测试，并修复同步抛错绕过安全错误页的问题。
+- 创建 [PR #6](https://github.com/vvitem/item_all/pull/6)，当前状态 `IN_REVIEW`。
+- 完成临时 Windows/最终前端验证并删除临时 Workflow，没有提前建设 M0-003 CI。
 
 ### 未完成
 
-- 正式产品名称、Go Module Path 和 Wails Application ID 尚未确认。
-- `M0-002` 设计 Spec 尚未完成和确认。
-- 仓库仍没有 Go/Wails/React 工程、构建或测试。
+- PR #6 尚未合并，因此 `M0-002` 不能标记为 `DONE`。
+- 正式 CI 门禁属于 `M0-003`，尚未开始。
+- SQLite、Keychain、Operation Bus、SSH、数据库和 AI 均未开始。
 
 ### 测试与证据
 
-- PR #1：55 个文件、4482 行新增，合并前无评论、无审查阻塞且可合并。
-- Merge Commit：`be37cfbb2bdca5a05c3303e9ea208992a8bf1721`。
-- Issue #2：包含完整验收清单和完成证据要求。
+- Actions Run `29242978948`：4 个前端测试、TypeScript、ESLint、Vite build、Go tests、race 和 Binding 漂移检查通过。
+- Actions Run `29243245959`：精确依赖、秘密/范围/远程资源扫描通过；Windows production build 和 EXE 启动通过。
+- 生产产物：`ItemAll.exe`，11,413,504 bytes。
+- Actions Run `29244060195`：`wails dev` 完成编译、WebView2 环境创建并进入目录监听。
+- Actions Run `29244814310`：同步异常回归测试在修复前按预期失败。
+- Actions Run `29244888867`：同步异常修复后回归测试通过。
+- Actions Run `29244941752`：5 个前端测试、TypeScript、ESLint 和 production build 最终验证通过。
+- 生成 Binding 只有 `GetAppInfo()`；`pnpm-workspace.yaml` 只批准 `esbuild` 构建脚本。
 
 ### 风险/阻塞
 
-没有外部阻塞。正式名称与 Module Path 是 `M0-002` 的设计决策门；未确认前不得创建最终 `go.mod`。
+无实现阻塞。当前合并门是 PR #6 的人工评审；首个业务代码 PR 不在用户确认前自动合并。
 
 ### 本周下一步
 
-1. 确认正式项目名称和 Go Module Path。
-2. 比较最小 Wails 工程的 2–3 种目录与初始化方案。
-3. 写入并评审 `M0-002` 设计 Spec。
-4. Spec 确认后再生成实现计划和代码 PR。
+1. 将 PR #6 标记为 Ready for Review。
+2. 等待合并决策。
+3. 合并后通过独立文档 PR 将 `M0-002` 更新为 `DONE`、`M0-003` 更新为 `READY`。
 
 ## 2026-W28（第 1 周）
 
