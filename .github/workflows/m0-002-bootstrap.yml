@@ -86,3 +86,7 @@ jobs:
         run: |
           go test ./internal/buildinfo -run TestCurrent -v
           go test -race ./internal/buildinfo
+
+      - name: Run app binding contract
+        shell: pwsh
+        run: go test . -run TestGetAppInfoReturnsSafeReadOnlyMetadata -v
