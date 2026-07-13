@@ -14,6 +14,7 @@
 - 新增 ItemAll Go 1.26.5 + Wails v2.13.0 标准根目录工程。
 - 新增只读 `GetAppInfo()` Binding 和 `internal/buildinfo`。
 - 新增 React/TypeScript/Vite 页面及 Loading、Ready、Error、Retry 测试。
+- 新增同步 Binding 抛错回归测试，验证异常文本和本地路径不会进入用户界面。
 - 新增官方 Wails 平台资源、Go/pnpm 锁文件、中文开发说明和 Makefile。
 - 新增 pnpm 供应链策略，仅批准 `esbuild` 安装构建脚本。
 
@@ -22,12 +23,14 @@
 - `M0-002` 从 `READY` 更新为 `IN_REVIEW`，关联 [PR #6](https://github.com/vvitem/item_all/pull/6)。
 - 项目状态更新为 `DONE=1`、`IN_REVIEW=1`、`NOT_STARTED=48`。
 - 实现路径由建议路径更新为 `main.go`、`app.go`、`internal/buildinfo`、`frontend/src` 和 `build`。
+- Binding 调用统一进入 Promise 链，同步抛错与异步 rejection 均进入安全错误状态。
 
 ### Validation
 
-- 前端测试、TypeScript、ESLint、Vite build、Go tests、race、Binding 漂移检查通过。
+- 5 个前端测试、TypeScript、ESLint、Vite build、Go tests、race、Binding 漂移检查通过。
 - Windows production build、EXE 启动烟测和 `wails dev` 就绪烟测通过。
 - 精确依赖、秘密、范围外能力和远程前端资源扫描通过。
+- 同步异常测试完成 RED→GREEN；最终前端验证 Run `29244941752` 通过。
 - 临时验证 Workflow 已删除；正式 CI 留在 M0-003。
 
 ### Business Code
