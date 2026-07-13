@@ -72,9 +72,7 @@ jobs:
           if (Select-String -Path wails.json -Pattern 'applicationID' -Quiet) { throw 'Unsupported applicationID field found' }
           $policy = Get-Content frontend\pnpm-workspace.yaml -Raw
           if ($policy -notmatch 'esbuild:\s*true') { throw 'esbuild build script is not explicitly approved' }
-          if ($policy -match '(?m)^\s*[^#\s][^:]*:\s*true\s*$' -and ([regex]::Matches($policy, ':\s*true')).Count -ne 1) {
-            throw 'Unexpected dependency build script approval found'
-          }
+          if (([regex]::Matches($policy, ':\s*true')).Count -ne 1) { throw 'Unexpected dependency build script approval found' }
 
       - name: Install frontend dependencies
         shell: pwsh
@@ -111,3 +109,70 @@ jobs:
           $exports = ([regex]::Matches($declaration, 'export function')).Count
           if ($exports -ne 1) { throw "Expected exactly one binding, found $exports" }
           git diff --exit-code -- go.mod go.sum frontend/wailsjs frontend/pnpm-lock.yaml
+
+      - name: Verify exact dependencies and implementation scope
+        shell: pwsh
+        run: |
+          $package = Get-Content frontend\package.json | ConvertFrom-Json
+          $versions = @($package.dependencies.PSObject.Properties.Value) + @($package.devDependencies.PSObject.Properties.Value)
+          foreach ($version in $versions) {
+            if ($version -match '[\^~*]' -or $version -in @('latest', 'next')) { throw "Unpinned dependency: $version" }
+          }
+          $implementationPaths = @('main.go', 'app.go', 'wails.json', 'Makefile', 'internal', 'frontend\src', 'frontend\package.json')
+          $files = Get-ChildItem $implementationPaths -Recurse -File
+          $secretMatches = $files | Select-String -Pattern 'BEGIN .*PRIVATE KEY|api[_-]?key|access[_-]?token|password\s*=|ssh\.exec|db\.execute|shell\.run' -CaseSensitive:$false
+          if ($secretMatches) { $secretMatches | ForEach-Object { Write-Host $_ }; throw 'Secret or out-of-scope capability detected' }
+          $remoteMatches = Get-ChildItem frontend\src,frontend\index.html -Recurse -File | Select-String -Pattern 'https?://' -CaseSensitive:$false
+          if ($remoteMatches) { $remoteMatches | ForEach-Object { Write-Host $_ }; throw 'Remote frontend asset detected' }
+
+      - name: Build Windows executable with metadata
+        shell: pwsh
+        run: |
+          $commit = git rev-parse --short=12 HEAD
+          $buildTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+          $ldflags = "-X github.com/vvitem/item_all/internal/buildinfo.Version=0.0.0-dev -X github.com/vvitem/item_all/internal/buildinfo.Commit=$commit -X github.com/vvitem/item_all/internal/buildinfo.BuildTime=$buildTime"
+          wails build -clean -trimpath -ldflags $ldflags
+          $exe = Get-Item build\bin\ItemAll.exe
+          if ($exe.Length -le 0) { throw 'Windows executable is empty' }
+          "commit=$commit" | Set-Content build-validation.txt
+          "build_time=$buildTime" | Add-Content build-validation.txt
+          "exe_size=$($exe.Length)" | Add-Content build-validation.txt
+
+      - name: Smoke test production executable
+        shell: pwsh
+        run: |
+          $process = Start-Process build\bin\ItemAll.exe -PassThru
+          Start-Sleep -Seconds 10
+          if ($process.HasExited) { throw "ItemAll.exe exited early with code $($process.ExitCode)" }
+          "production_start=success" | Add-Content build-validation.txt
+          Stop-Process -Id $process.Id -Force
+
+      - name: Smoke test Wails development mode
+        shell: pwsh
+        run: |
+          $stdout = Join-Path $env:GITHUB_WORKSPACE 'wails-dev.stdout.log'
+          $stderr = Join-Path $env:GITHUB_WORKSPACE 'wails-dev.stderr.log'
+          $wailsPath = (Get-Command wails).Source
+          $dev = Start-Process -FilePath $wailsPath -ArgumentList 'dev' -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+          Start-Sleep -Seconds 30
+          $app = Get-Process ItemAll -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($dev.HasExited -or -not $app) {
+            Get-Content $stdout -ErrorAction SilentlyContinue
+            Get-Content $stderr -ErrorAction SilentlyContinue
+            throw 'wails dev did not keep the ItemAll application running'
+          }
+          "development_start=success" | Add-Content build-validation.txt
+          Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
+          Stop-Process -Id $dev.Id -Force -ErrorAction SilentlyContinue
+
+      - name: Upload Windows validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: itemall-windows-validation
+          path: |
+            build-validation.txt
+            build/bin/ItemAll.exe
+            wails-dev.stdout.log
+            wails-dev.stderr.log
+          if-no-files-found: warn
