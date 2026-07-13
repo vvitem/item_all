@@ -66,3 +66,7 @@ jobs:
           $generatedHash = (Get-FileHash .wails-scaffold\build\appicon.png -Algorithm SHA256).Hash
           Remove-Item -Recurse -Force .wails-scaffold
           if ($trackedHash -ne $generatedHash) { throw 'Tracked Wails assets differ from v2.13.0 template' }
+
+      - name: Run build information contract
+        shell: pwsh
+        run: go test ./internal/buildinfo -run TestCurrent -v
