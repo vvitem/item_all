@@ -19,7 +19,8 @@ export default function App({ loadAppInfo = getAppInfo }: AppProps) {
     let active = true
     setState({ kind: 'loading' })
 
-    loadAppInfo()
+    Promise.resolve()
+      .then(loadAppInfo)
       .then((info) => {
         if (active) {
           setState({ kind: 'ready', info })
