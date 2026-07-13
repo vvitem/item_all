@@ -34,11 +34,22 @@ describe('App', () => {
     expect(screen.getByText('运行正常')).toBeInTheDocument()
   })
 
-  it('shows a safe error without exposing the thrown message', async () => {
+  it('shows a safe error without exposing an asynchronous rejection', async () => {
     render(<App loadAppInfo={async () => Promise.reject(new Error('C:\\Users\\secret\\token.txt'))} />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('无法读取应用信息')
     expect(screen.queryByText(/secret|token\.txt/i)).not.toBeInTheDocument()
+  })
+
+  it('shows the safe error state when the binding throws synchronously', async () => {
+    const loadAppInfo = () => {
+      throw new Error('C:\\Users\\secret\\sync-token.txt')
+    }
+
+    render(<App loadAppInfo={loadAppInfo} />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('无法读取应用信息')
+    expect(screen.queryByText(/secret|sync-token\.txt/i)).not.toBeInTheDocument()
   })
 
   it('retries after a failed request', async () => {
