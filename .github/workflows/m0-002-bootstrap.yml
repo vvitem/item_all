@@ -73,15 +73,20 @@ jobs:
 
       - name: Install frontend dependencies
         shell: pwsh
-        run: pnpm --dir frontend install --frozen-lockfile
+        run: |
+          Set-Location frontend
+          pnpm install --frozen-lockfile
+          Set-Location ..
 
       - name: Run frontend contracts
         shell: pwsh
         run: |
-          pnpm --dir frontend test:run -- App.test.tsx
-          pnpm --dir frontend typecheck
-          pnpm --dir frontend lint
-          pnpm --dir frontend build
+          Set-Location frontend
+          pnpm test:run -- App.test.tsx
+          pnpm typecheck
+          pnpm lint
+          pnpm build
+          Set-Location ..
           if (-not (Test-Path frontend\dist\index.html)) { throw 'Frontend production build is missing' }
 
       - name: Run Go contracts against production frontend
