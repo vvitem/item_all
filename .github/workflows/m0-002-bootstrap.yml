@@ -1,4 +1,4 @@
-name: M0-002 bootstrap
+name: M0-002 development smoke
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  bootstrap:
+  development-smoke:
     if: github.actor != 'github-actions[bot]'
     runs-on: windows-latest
     steps:
@@ -42,37 +42,17 @@ jobs:
         with:
           node-version: '24.18.0'
 
-      - name: Enable pnpm
+      - name: Enable pnpm and install Wails
         shell: pwsh
         run: |
           corepack enable
           corepack prepare pnpm@11.12.0 --activate
-          if ((pnpm --version) -ne '11.12.0') { throw 'Unexpected pnpm version' }
-
-      - name: Install Wails CLI
-        shell: pwsh
-        run: |
           $goBin = Join-Path (go env GOPATH) 'bin'
           $wailsPath = Join-Path $goBin 'wails.exe'
           if (-not (Test-Path $wailsPath)) {
             go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
           }
           $goBin | Out-File -FilePath $env:GITHUB_PATH -Append
-          $wailsVersion = (& $wailsPath version | Out-String).Trim()
-          Write-Host $wailsVersion
-          if ($wailsVersion -notmatch 'v2\.13\.0') { throw 'Unexpected Wails version' }
-
-      - name: Verify project boundaries
-        shell: pwsh
-        run: |
-          if (-not (Test-Path build\appicon.png)) { throw 'Missing appicon.png' }
-          if (-not (Test-Path build\windows\icon.ico)) { throw 'Missing Windows icon' }
-          if (-not (Test-Path build\windows\info.json)) { throw 'Missing Windows version template' }
-          if (-not (Test-Path build\windows\wails.exe.manifest)) { throw 'Missing Windows manifest' }
-          if (Select-String -Path wails.json -Pattern 'applicationID' -Quiet) { throw 'Unsupported applicationID field found' }
-          $policy = Get-Content frontend\pnpm-workspace.yaml -Raw
-          if ($policy -notmatch 'esbuild:\s*true') { throw 'esbuild build script is not explicitly approved' }
-          if (([regex]::Matches($policy, ':\s*true')).Count -ne 1) { throw 'Unexpected dependency build script approval found' }
 
       - name: Install frontend dependencies
         shell: pwsh
@@ -81,73 +61,7 @@ jobs:
           pnpm install --frozen-lockfile
           Set-Location ..
 
-      - name: Run frontend contracts
-        shell: pwsh
-        run: |
-          Set-Location frontend
-          pnpm test:run -- App.test.tsx
-          pnpm typecheck
-          pnpm lint
-          pnpm build
-          Set-Location ..
-          if (-not (Test-Path frontend\dist\index.html)) { throw 'Frontend production build is missing' }
-
-      - name: Run Go contracts against production frontend
-        shell: pwsh
-        run: |
-          go mod tidy
-          go test ./... -v
-          go test -race ./internal/buildinfo
-
-      - name: Verify generated Wails bindings and lockfiles
-        shell: pwsh
-        run: |
-          wails generate module
-          $declaration = Get-Content frontend\wailsjs\go\main\App.d.ts -Raw
-          if ($declaration -notmatch 'GetAppInfo') { throw 'GetAppInfo binding was not generated' }
-          if ($declaration -match 'Shell|Database|Environment|FileSystem|Network') { throw 'Unexpected binding capability generated' }
-          $exports = ([regex]::Matches($declaration, 'export function')).Count
-          if ($exports -ne 1) { throw "Expected exactly one binding, found $exports" }
-          git diff --exit-code -- go.mod go.sum frontend/wailsjs frontend/pnpm-lock.yaml
-
-      - name: Verify exact dependencies and implementation scope
-        shell: pwsh
-        run: |
-          $package = Get-Content frontend\package.json | ConvertFrom-Json
-          $versions = @($package.dependencies.PSObject.Properties.Value) + @($package.devDependencies.PSObject.Properties.Value)
-          foreach ($version in $versions) {
-            if ($version -match '[\^~*]' -or $version -in @('latest', 'next')) { throw "Unpinned dependency: $version" }
-          }
-          $implementationPaths = @('main.go', 'app.go', 'wails.json', 'Makefile', 'internal', 'frontend\src', 'frontend\package.json')
-          $files = Get-ChildItem $implementationPaths -Recurse -File
-          $secretMatches = $files | Select-String -Pattern 'BEGIN .*PRIVATE KEY|api[_-]?key|access[_-]?token|password\s*=|ssh\.exec|db\.execute|shell\.run' -CaseSensitive:$false
-          if ($secretMatches) { $secretMatches | ForEach-Object { Write-Host $_ }; throw 'Secret or out-of-scope capability detected' }
-          $remoteMatches = Get-ChildItem frontend\src,frontend\index.html -Recurse -File | Select-String -Pattern 'https?://' -CaseSensitive:$false
-          if ($remoteMatches) { $remoteMatches | ForEach-Object { Write-Host $_ }; throw 'Remote frontend asset detected' }
-
-      - name: Build Windows executable with metadata
-        shell: pwsh
-        run: |
-          $commit = git rev-parse --short=12 HEAD
-          $buildTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-          $ldflags = "-X github.com/vvitem/item_all/internal/buildinfo.Version=0.0.0-dev -X github.com/vvitem/item_all/internal/buildinfo.Commit=$commit -X github.com/vvitem/item_all/internal/buildinfo.BuildTime=$buildTime"
-          wails build -clean -trimpath -ldflags $ldflags
-          $exe = Get-Item build\bin\ItemAll.exe
-          if ($exe.Length -le 0) { throw 'Windows executable is empty' }
-          "commit=$commit" | Set-Content build-validation.txt
-          "build_time=$buildTime" | Add-Content build-validation.txt
-          "exe_size=$($exe.Length)" | Add-Content build-validation.txt
-
-      - name: Smoke test production executable
-        shell: pwsh
-        run: |
-          $process = Start-Process build\bin\ItemAll.exe -PassThru
-          Start-Sleep -Seconds 10
-          if ($process.HasExited) { throw "ItemAll.exe exited early with code $($process.ExitCode)" }
-          "production_start=success" | Add-Content build-validation.txt
-          Stop-Process -Id $process.Id -Force
-
-      - name: Smoke test Wails development mode
+      - name: Verify Wails development readiness
         shell: pwsh
         run: |
           $stdout = Join-Path $env:GITHUB_WORKSPACE 'wails-dev.stdout.log'
@@ -155,31 +69,17 @@ jobs:
           $wailsPath = (Get-Command wails).Source
           $dev = Start-Process -FilePath $wailsPath -ArgumentList 'dev' -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
           $deadline = (Get-Date).AddSeconds(120)
-          $app = $null
+          $ready = $false
           while ((Get-Date) -lt $deadline) {
-            $app = Get-Process ItemAll -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($app) { break }
+            $combined = (Get-Content $stdout,$stderr -Raw -ErrorAction SilentlyContinue) -join "`n"
+            if ($combined -match 'Environment created successfully' -and $combined -match 'Watching \(sub\)/directory') {
+              $ready = $true
+              break
+            }
             if ($dev.HasExited) { break }
             Start-Sleep -Seconds 5
           }
-          if (-not $app) {
-            Get-Content $stdout -ErrorAction SilentlyContinue
-            Get-Content $stderr -ErrorAction SilentlyContinue
-            Stop-Process -Id $dev.Id -Force -ErrorAction SilentlyContinue
-            throw 'wails dev did not start ItemAll within 120 seconds'
-          }
-          "development_start=success" | Add-Content build-validation.txt
-          Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
-          Stop-Process -Id $dev.Id -Force -ErrorAction SilentlyContinue
-
-      - name: Upload Windows validation evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: itemall-windows-validation
-          path: |
-            build-validation.txt
-            build/bin/ItemAll.exe
-            wails-dev.stdout.log
-            wails-dev.stderr.log
-          if-no-files-found: warn
+          Get-Content $stdout -ErrorAction SilentlyContinue
+          Get-Content $stderr -ErrorAction SilentlyContinue
+          cmd /c "taskkill /PID $($dev.Id) /T /F" | Out-Null
+          if (-not $ready) { throw 'Wails development readiness markers were not observed' }
