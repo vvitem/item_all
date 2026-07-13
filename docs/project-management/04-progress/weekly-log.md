@@ -20,8 +20,9 @@
 - 建立 Go 1.26.5、Wails v2.13.0、Node 24.18.0、pnpm 11.12.0 工程骨架。
 - 实现只读 `GetAppInfo()`、构建元数据和 React Loading/Ready/Error/Retry 页面。
 - 提交官方 Wails 平台资源、精确依赖锁文件、中文开发文档和可选 Makefile。
+- 代码审查补充同步 Binding 异常回归测试，并修复同步抛错绕过安全错误页的问题。
 - 创建 [PR #6](https://github.com/vvitem/item_all/pull/6)，当前状态 `IN_REVIEW`。
-- 完成临时 Windows 验证并删除临时 Workflow，没有提前建设 M0-003 CI。
+- 完成临时 Windows/最终前端验证并删除临时 Workflow，没有提前建设 M0-003 CI。
 
 ### 未完成
 
@@ -35,16 +36,19 @@
 - Actions Run `29243245959`：精确依赖、秘密/范围/远程资源扫描通过；Windows production build 和 EXE 启动通过。
 - 生产产物：`ItemAll.exe`，11,413,504 bytes。
 - Actions Run `29244060195`：`wails dev` 完成编译、WebView2 环境创建并进入目录监听。
+- Actions Run `29244814310`：同步异常回归测试在修复前按预期失败。
+- Actions Run `29244888867`：同步异常修复后回归测试通过。
+- Actions Run `29244941752`：5 个前端测试、TypeScript、ESLint 和 production build 最终验证通过。
 - 生成 Binding 只有 `GetAppInfo()`；`pnpm-workspace.yaml` 只批准 `esbuild` 构建脚本。
 
 ### 风险/阻塞
 
-无实现阻塞。当前合并门是 PR #6 的整体代码审查；首个业务代码 PR 不在审查完成前自动合并。
+无实现阻塞。当前合并门是 PR #6 的人工评审；首个业务代码 PR 不在用户确认前自动合并。
 
 ### 本周下一步
 
-1. 完成 PR #6 的规范和代码质量复核。
-2. 将 PR #6 标记为 Ready for Review。
+1. 将 PR #6 标记为 Ready for Review。
+2. 等待合并决策。
 3. 合并后通过独立文档 PR 将 `M0-002` 更新为 `DONE`、`M0-003` 更新为 `READY`。
 
 ## 2026-W28（第 1 周）
