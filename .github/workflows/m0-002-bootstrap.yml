@@ -1,9 +1,6 @@
 name: M0-002 bootstrap
 
 on:
-  push:
-    branches:
-      - feat/m0-002-project-scaffold
   pull_request:
     branches:
       - main
@@ -47,27 +44,23 @@ jobs:
         shell: pwsh
         run: |
           go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
-          wails version
+          if ((wails version) -notmatch 'v2.13.0') { throw 'Unexpected Wails version' }
 
-      - name: Generate official platform resources
+      - name: Verify official platform resources
+        shell: pwsh
+        run: |
+          if (-not (Test-Path build\appicon.png)) { throw 'Missing appicon.png' }
+          if (-not (Test-Path build\windows\icon.ico)) { throw 'Missing Windows icon' }
+          if (-not (Test-Path build\windows\info.json)) { throw 'Missing Windows version template' }
+          if (-not (Test-Path build\windows\wails.exe.manifest)) { throw 'Missing Windows manifest' }
+          if (Select-String -Path wails.json -Pattern 'applicationID' -Quiet) { throw 'Unsupported applicationID field found' }
+
+      - name: Confirm platform assets are reproducible
         shell: pwsh
         run: |
           Remove-Item -Recurse -Force .wails-scaffold -ErrorAction SilentlyContinue
           wails init -n ItemAll -d .wails-scaffold -t react-ts -q
-          Copy-Item .wails-scaffold\build . -Recurse -Force
+          $trackedHash = (Get-FileHash build\appicon.png -Algorithm SHA256).Hash
+          $generatedHash = (Get-FileHash .wails-scaffold\build\appicon.png -Algorithm SHA256).Hash
           Remove-Item -Recurse -Force .wails-scaffold
-          if (-not (Test-Path build\appicon.png)) { throw 'Missing appicon.png' }
-          if (-not (Test-Path build\windows\icon.ico)) { throw 'Missing Windows icon' }
-          if (-not (Test-Path build\windows\info.json)) { throw 'Missing Windows version template' }
-          if (Select-String -Path wails.json -Pattern 'applicationID' -Quiet) { throw 'Unsupported applicationID field found' }
-
-      - name: Commit generated assets
-        shell: pwsh
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add build
-          if (-not (git diff --cached --quiet)) {
-            git commit -m 'build: add official Wails platform assets'
-            git push origin HEAD:feat/m0-002-project-scaffold
-          }
+          if ($trackedHash -ne $generatedHash) { throw 'Tracked Wails assets differ from v2.13.0 template' }
