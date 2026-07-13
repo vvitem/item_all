@@ -1,9 +1,9 @@
 > 状态：维护中  
 > 负责人：vvitem  
 > 最后更新：2026-07-13  
-> 基线 Commit：`47ad2e428a7db862195b871abbea42ac4c4e930d`  
+> 基线 Commit：`dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：[Issue #2](https://github.com/vvitem/item_all/issues/2) · [PR #6](https://github.com/vvitem/item_all/pull/6)
+> 关联 Issue/PR：[PR #6](https://github.com/vvitem/item_all/pull/6) · [Issue #7](https://github.com/vvitem/item_all/issues/7)
 
 # 周报日志
 
@@ -11,7 +11,7 @@
 
 ### 目标
 
-冻结 ItemAll 工程身份，完成 `M0-002` 设计、实现计划和最小 Go/Wails/React 桌面骨架。
+冻结 ItemAll 工程身份，完成 `M0-002` 设计、实现计划、最小 Go/Wails/React 桌面骨架和合并验收。
 
 ### 已完成
 
@@ -19,15 +19,16 @@
 - [PR #4](https://github.com/vvitem/item_all/pull/4) 合并 M0-002 设计；[PR #5](https://github.com/vvitem/item_all/pull/5) 合并实现计划。
 - 建立 Go 1.26.5、Wails v2.13.0、Node 24.18.0、pnpm 11.12.0 工程骨架。
 - 实现只读 `GetAppInfo()`、构建元数据和 React Loading/Ready/Error/Retry 页面。
-- 提交官方 Wails 平台资源、精确依赖锁文件、中文开发文档和可选 Makefile。
+- 提交官方 Wails 平台资源、精确依赖锁文件、中文开发文档和 Makefile。
 - 代码审查补充同步 Binding 异常回归测试，并修复同步抛错绕过安全错误页的问题。
-- 创建 [PR #6](https://github.com/vvitem/item_all/pull/6)，当前状态 `IN_REVIEW`。
-- 完成临时 Windows/最终前端验证并删除临时 Workflow，没有提前建设 M0-003 CI。
+- [PR #6](https://github.com/vvitem/item_all/pull/6) 已 squash 合并，Merge Commit `dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`。
+- `M0-002` 已从 `IN_REVIEW` 更新为 `DONE`。
+- 创建 [Issue #7](https://github.com/vvitem/item_all/issues/7)，`M0-003` 更新为 `READY`。
+- 完成临时 Windows/最终前端验证并删除临时 Workflow，没有提前把验证脚本作为正式 CI 提交。
 
 ### 未完成
 
-- PR #6 尚未合并，因此 `M0-002` 不能标记为 `DONE`。
-- 正式 CI 门禁属于 `M0-003`，尚未开始。
+- 正式 CI 门禁属于 `M0-003`，尚未开始实现。
 - SQLite、Keychain、Operation Bus、SSH、数据库和 AI 均未开始。
 
 ### 测试与证据
@@ -40,16 +41,18 @@
 - Actions Run `29244888867`：同步异常修复后回归测试通过。
 - Actions Run `29244941752`：5 个前端测试、TypeScript、ESLint 和 production build 最终验证通过。
 - 生成 Binding 只有 `GetAppInfo()`；`pnpm-workspace.yaml` 只批准 `esbuild` 构建脚本。
+- M0-002 完成证据：PR #6 和 Merge Commit `dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`。
 
 ### 风险/阻塞
 
-无实现阻塞。当前合并门是 PR #6 的人工评审；首个业务代码 PR 不在用户确认前自动合并。
+无外部阻塞。下一风险集中在 M0-003：需要同时覆盖 Linux 快速反馈与 Windows Wails 构建，并通过故意失败验证证明门禁真实有效。
 
 ### 本周下一步
 
-1. 将 PR #6 标记为 Ready for Review。
-2. 等待合并决策。
-3. 合并后通过独立文档 PR 将 `M0-002` 更新为 `DONE`、`M0-003` 更新为 `READY`。
+1. 合并 M0-002 状态同步 PR并关闭 Issue #2。
+2. 为 Issue #7 编写 M0-003 设计 Spec。
+3. 编写 M0-003 实施计划并按 TDD 建立永久 CI。
+4. 在 CI 门禁完成前不启动 SSH、数据库或 AI 功能。
 
 ## 2026-W28（第 1 周）
 
