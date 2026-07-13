@@ -154,12 +154,19 @@ jobs:
           $stderr = Join-Path $env:GITHUB_WORKSPACE 'wails-dev.stderr.log'
           $wailsPath = (Get-Command wails).Source
           $dev = Start-Process -FilePath $wailsPath -ArgumentList 'dev' -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
-          Start-Sleep -Seconds 30
-          $app = Get-Process ItemAll -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($dev.HasExited -or -not $app) {
+          $deadline = (Get-Date).AddSeconds(120)
+          $app = $null
+          while ((Get-Date) -lt $deadline) {
+            $app = Get-Process ItemAll -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($app) { break }
+            if ($dev.HasExited) { break }
+            Start-Sleep -Seconds 5
+          }
+          if (-not $app) {
             Get-Content $stdout -ErrorAction SilentlyContinue
             Get-Content $stderr -ErrorAction SilentlyContinue
-            throw 'wails dev did not keep the ItemAll application running'
+            Stop-Process -Id $dev.Id -Force -ErrorAction SilentlyContinue
+            throw 'wails dev did not start ItemAll within 120 seconds'
           }
           "development_start=success" | Add-Content build-validation.txt
           Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
