@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - feat/m0-002-project-scaffold
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
