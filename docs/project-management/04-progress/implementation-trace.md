@@ -10,7 +10,7 @@
 | Requirement/Scenario | Task | Design Doc | Code Path | Test Path | Issue/PR | Status |
 |---|---|---|---|---|---|---|
 | Project Management Baseline | M0-001 | `docs/project-management/**` | `README.md`, `.github/**`, `docs/project-management/**` | 文档非空、相对链接与 Reference SHA 校验 | [PR #1](https://github.com/vvitem/item_all/pull/1) / `be37cfb` | DONE |
-| ItemAll Scaffold | M0-002 | `docs/superpowers/specs/2026-07-13-m0-002-project-scaffold-design.md` | `main.go`, `app.go`, `internal/buildinfo`, `frontend/src`, `build`, `wails.json` | `app_test.go`, `internal/buildinfo/info_test.go`, `frontend/src/App.test.tsx`；Actions `29242978948`、`29243245959`、`29244060195` | [Issue #2](https://github.com/vvitem/item_all/issues/2) / [PR #6](https://github.com/vvitem/item_all/pull/6) | IN_REVIEW |
+| ItemAll Scaffold | M0-002 | `docs/superpowers/specs/2026-07-13-m0-002-project-scaffold-design.md` | `main.go`, `app.go`, `internal/buildinfo`, `frontend/src`, `build`, `wails.json` | `app_test.go`, `internal/buildinfo/info_test.go`, `frontend/src/App.test.tsx`；Actions `29242978948`、`29243245959`、`29244060195`、`29244941752` | [Issue #2](https://github.com/vvitem/item_all/issues/2) / [PR #6](https://github.com/vvitem/item_all/pull/6) | IN_REVIEW |
 | SSH-01/02/10 | M1-005 | tool-contracts.md | 建议：internal/ssh/tools | 建议：internal/ssh/tools/*_test.go | 待创建 | NOT_STARTED |
 | SSH-03/04 | M1-006 | tool-contracts.md | 建议：internal/ssh/tools | 建议：path_boundary_test.go | 待创建 | NOT_STARTED |
 | SSH-05/06 | M1-007 | tool-contracts.md | 建议：internal/ssh/tools | 建议：service_process_test.go | 待创建 | NOT_STARTED |
