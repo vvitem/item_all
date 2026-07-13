@@ -35,12 +35,12 @@
 - Create: `main.go` — Wails 应用装配、前端资源嵌入和窗口参数。
 - Create: `app.go` — `App`、`AppInfo` 和 `GetAppInfo()` Binding。
 - Create: `app_test.go` — Binding DTO 单元测试。
-- Create: `wails.json` — Wails v2 项目配置和 pnpm 命令。
+- Create: `wails.json` — Wails v2 项目配置、产品元数据和 pnpm 命令。
 - Create: `.nvmrc` — 固定 Node.js 24.18.0。
 - Create: `.npmrc` — 固定精确依赖策略。
 - Create: `.gitignore` — 排除构建产物、依赖和编辑器文件。
 - Create: `Makefile` — 可选命令别名；底层命令仍必须能在 Windows PowerShell 直接运行。
-- Modify: `README.md` — 增加开发、测试和 Windows 构建步骤。
+- Modify: `README.md` — 增加中文开发、测试和 Windows 构建步骤。
 
 ### Go 内部包
 
@@ -53,7 +53,7 @@
 - Create: `build/darwin/Info.dev.plist` — 从官方模板生成。
 - Create: `build/darwin/Info.plist` — 从官方模板生成。
 - Create: `build/windows/icon.ico` — 从官方模板生成。
-- Create: `build/windows/info.json` — 从官方模板生成并将产品名改为 ItemAll。
+- Create: `build/windows/info.json` — 保留官方模板，由 `wails.json.info` 注入产品字段。
 - Create: `build/windows/wails.exe.manifest` — 从官方模板生成。
 
 ### 前端配置
@@ -91,7 +91,7 @@
 
 ---
 
-### Task 1: 固定工具链并建立可编译的 Wails 项目边界
+### Task 1: 固定工具链并建立 Wails 项目边界
 
 **Files:**
 - Create: `go.mod`
@@ -255,6 +255,7 @@ Create `wails.json`:
 ```json
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
+  "version": "2",
   "name": "ItemAll",
   "outputfilename": "ItemAll",
   "frontend:install": "pnpm install --frozen-lockfile",
@@ -262,8 +263,14 @@ Create `wails.json`:
   "frontend:dev:watcher": "pnpm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
-    "name": "vvitem",
-    "email": ""
+    "name": "vvitem"
+  },
+  "info": {
+    "companyName": "vvitem",
+    "productName": "ItemAll",
+    "productVersion": "0.0.0-dev",
+    "copyright": "Copyright © 2026 vvitem",
+    "comments": "Local-first SafeOps desktop workspace"
   }
 }
 ```
@@ -271,21 +278,25 @@ Create `wails.json`:
 Run:
 
 ```powershell
-Get-Content wails.json | ConvertFrom-Json | Select-Object name, outputfilename
+$config = Get-Content wails.json | ConvertFrom-Json
+$config.name
+$config.outputfilename
+$config.info.productName
 ```
 
 Expected:
 
 ```text
-name    outputfilename
-----    --------------
-ItemAll ItemAll
+ItemAll
+ItemAll
+ItemAll
 ```
 
-- [ ] **Step 8: 检查本任务边界**
+- [ ] **Step 8: 检查工具链文件的安全边界**
 
 ```powershell
-Get-ChildItem -Recurse -File | Select-String -Pattern "applicationID|API_KEY|TOKEN|PASSWORD|BEGIN .*PRIVATE KEY" -CaseSensitive
+Get-ChildItem go.mod,wails.json,.nvmrc,.npmrc,.gitignore,build -Recurse -File |
+  Select-String -Pattern "applicationID|API_KEY|TOKEN|PASSWORD|BEGIN .*PRIVATE KEY" -CaseSensitive
 ```
 
 Expected: 没有命中。`com.vvitem.itemall` 只记录在决策与设计文档中，不伪造 Wails v2 配置字段。
@@ -471,17 +482,18 @@ git commit -m "feat: add immutable build information"
 
 ---
 
-### Task 3: 以 TDD 实现只读 Wails AppInfo Binding
+### Task 3: 以 TDD 实现只读 Binding 和桌面 Composition Root
 
 **Files:**
 - Create: `app_test.go`
 - Create: `app.go`
+- Create: `main.go`
 - Generate: `go.sum`
 - Generate: `frontend/wailsjs/**`
 
 **Interfaces:**
-- Consumes: `buildinfo.Current() buildinfo.Info`。
-- Produces: `NewApp() *App`、`(*App).GetAppInfo() AppInfo` 和前端生成 Binding `GetAppInfo(): Promise<AppInfo>`。
+- Consumes: `buildinfo.Current() buildinfo.Info`、`wails.json` 和本地 `frontend/dist` 构建目录。
+- Produces: `NewApp() *App`、`(*App).GetAppInfo() AppInfo`、可构建 Wails Composition Root 和前端生成 Binding `GetAppInfo(): Promise<AppInfo>`。
 
 - [ ] **Step 1: 写入失败测试**
 
@@ -559,7 +571,6 @@ import (
 )
 
 const tagline = "Local-first SafeOps"
-
 const appStatusReady = "ready"
 
 type App struct{}
@@ -592,17 +603,68 @@ func (a *App) GetAppInfo() AppInfo {
 }
 ```
 
-- [ ] **Step 4: 整理依赖并运行全部 Go 测试**
+- [ ] **Step 4: 创建 Wails Composition Root**
+
+Create `main.go`:
+
+```go
+package main
+
+import (
+	"embed"
+	"log"
+
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+)
+
+//go:embed all:frontend/dist
+var assets embed.FS
+
+func main() {
+	app := NewApp()
+
+	err := wails.Run(&options.App{
+		Title:     "ItemAll",
+		Width:     1024,
+		Height:    700,
+		MinWidth:  800,
+		MinHeight: 560,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		BackgroundColour: &options.RGBA{R: 2, G: 6, B: 23, A: 1},
+		Bind: []interface{}{
+			app,
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+Create a local, ignored embed input before the real frontend is built:
 
 ```powershell
-gofmt -w app.go app_test.go
+New-Item -ItemType Directory frontend\dist -Force | Out-Null
+Set-Content frontend\dist\index.html '<!doctype html><html><body>ItemAll build bootstrap</body></html>'
+```
+
+The bootstrap file remains ignored by Git and is replaced by `pnpm build` in Task 4.
+
+- [ ] **Step 5: 整理依赖并运行全部 Go 测试**
+
+```powershell
+gofmt -w app.go app_test.go main.go
 go mod tidy
 go test ./... -v
 ```
 
 Expected: `app` 和 `internal/buildinfo` 测试全部 PASS，并生成 `go.sum`。
 
-- [ ] **Step 5: 生成 Wails TypeScript Binding**
+- [ ] **Step 6: 生成 Wails TypeScript Binding**
 
 ```powershell
 wails generate module
@@ -618,7 +680,7 @@ Get-ChildItem frontend\wailsjs -Recurse -File | Select-String -Pattern "GetAppIn
 
 Expected: 至少命中 `App.js` 和 `App.d.ts`。
 
-- [ ] **Step 6: 确认 Binding 没有额外能力**
+- [ ] **Step 7: 确认 Binding 没有额外能力**
 
 ```powershell
 Get-Content frontend\wailsjs\go\main\App.d.ts
@@ -626,12 +688,14 @@ Get-Content frontend\wailsjs\go\main\App.d.ts
 
 Expected: 只暴露 `GetAppInfo`，不包含文件系统、网络、Shell、数据库或环境变量方法。
 
-- [ ] **Step 7: 提交 Binding 和模块锁定**
+- [ ] **Step 8: 提交 Binding、Composition Root 和模块锁定**
 
 ```powershell
-git add app.go app_test.go go.mod go.sum frontend/wailsjs
+git add app.go app_test.go main.go go.mod go.sum frontend/wailsjs
 git commit -m "feat: expose read-only app information"
 ```
+
+Expected: `frontend/dist/index.html` 不在提交中。
 
 ---
 
@@ -674,8 +738,8 @@ Create `frontend/package.json`:
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "typecheck": "tsc -b --pretty false",
+    "build": "pnpm typecheck && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json --pretty false && tsc --noEmit -p tsconfig.node.json --pretty false",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest",
     "test:run": "vitest run",
@@ -689,6 +753,7 @@ Create `frontend/package.json`:
     "@eslint/js": "9.30.1",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.0",
+    "@types/node": "24.0.13",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.0",
     "@vitejs/plugin-react": "5.0.0",
@@ -740,7 +805,7 @@ Create `frontend/tsconfig.json`:
     "jsx": "react-jsx",
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src"]
 }
 ```
 
@@ -749,21 +814,25 @@ Create `frontend/tsconfig.node.json`:
 ```json
 {
   "compilerOptions": {
-    "composite": true,
-    "skipLibCheck": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": ["vite.config.ts", "eslint.config.js"]
+  "include": ["vite.config.ts"]
 }
 ```
 
 Create `frontend/vite.config.ts`:
 
 ```ts
-import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
@@ -877,6 +946,7 @@ describe('App', () => {
     expect(screen.getByText('Local-first SafeOps')).toBeInTheDocument()
     expect(screen.getByText('0.0.0-dev')).toBeInTheDocument()
     expect(screen.getByText('abc123def456')).toBeInTheDocument()
+    expect(screen.getByText('2026-07-13T08:00:00Z')).toBeInTheDocument()
     expect(screen.getByText('go1.26.5 windows/amd64')).toBeInTheDocument()
     expect(screen.getByText('运行正常')).toBeInTheDocument()
   })
@@ -992,7 +1062,7 @@ export default function App({ loadAppInfo = getAppInfo }: AppProps) {
           <h1>{info.name}</h1>
           <p className="tagline">{info.tagline}</p>
         </div>
-        <span className="health-badge">运行正常</span>
+        <span className="health-badge">{info.status === 'ready' ? '运行正常' : '状态异常'}</span>
       </header>
 
       <section className="metadata" aria-label="应用构建信息">
@@ -1208,7 +1278,7 @@ Set-Location ..
 
 Expected: 4 个测试全部 PASS。
 
-- [ ] **Step 9: 运行前端静态验证**
+- [ ] **Step 9: 运行前端静态验证并替换 bootstrap dist**
 
 ```powershell
 Set-Location frontend
@@ -1218,80 +1288,52 @@ pnpm build
 Set-Location ..
 ```
 
-Expected: 三个命令均成功，`frontend/dist/index.html` 存在。
+Expected: 三个命令均成功，`frontend/dist/index.html` 由 Vite 生成，不再包含 `ItemAll build bootstrap`。
 
 - [ ] **Step 10: 提交前端三态页面**
 
 ```powershell
-git add frontend
+git add frontend/package.json frontend/pnpm-lock.yaml frontend/index.html frontend/tsconfig.json frontend/tsconfig.node.json frontend/vite.config.ts frontend/eslint.config.js frontend/src
 git commit -m "feat: add app information screen"
 ```
 
+Generated `frontend/dist` remains ignored and is not committed。
+
 ---
 
-### Task 5: 装配桌面应用、构建注入和开发命令
+### Task 5: 构建注入、开发命令和 Windows 验证
 
 **Files:**
-- Create: `main.go`
 - Create: `Makefile`
 - Modify: `README.md`
-- Modify: `build/windows/info.json`
+- Verify: `main.go`
+- Verify: `wails.json`
+- Verify: `build/windows/info.json`
 
 **Interfaces:**
-- Consumes: `NewApp()`、`frontend/dist`、Wails v2 配置和 buildinfo ldflags 字段。
-- Produces: 可执行的 `wails dev` 与 `wails build`，以及可复现的开发文档。
+- Consumes: `NewApp()`、`main.go`、`frontend/dist`、Wails v2 配置和 buildinfo ldflags 字段。
+- Produces: 可执行的 `wails dev` 与 `wails build`，以及可复现的中文开发文档。
 
-- [ ] **Step 1: 写入 Wails Composition Root**
-
-Create `main.go`:
-
-```go
-package main
-
-import (
-	"embed"
-	"log"
-
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-)
-
-//go:embed all:frontend/dist
-var assets embed.FS
-
-func main() {
-	app := NewApp()
-
-	err := wails.Run(&options.App{
-		Title:     "ItemAll",
-		Width:     1024,
-		Height:    700,
-		MinWidth:  800,
-		MinHeight: 560,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
-		},
-		BackgroundColour: &options.RGBA{R: 2, G: 6, B: 23, A: 1},
-		Bind: []interface{}{
-			app,
-		},
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-```
-
-Run:
+- [ ] **Step 1: 验证 Wails 配置驱动的产品元数据**
 
 ```powershell
-gofmt -w main.go
-go mod tidy
-go test ./...
+$config = Get-Content wails.json | ConvertFrom-Json
+$config.info.companyName
+$config.info.productName
+$config.info.productVersion
+$config.info.comments
 ```
 
-Expected: PASS；`go test` 同时验证根包能够编译并成功嵌入 `frontend/dist`。
+Expected:
+
+```text
+vvitem
+ItemAll
+0.0.0-dev
+Local-first SafeOps desktop workspace
+```
+
+Do not hand-edit `build/windows/info.json`; it remains the Wails v2 template and consumes `wails.json.info` during build。
 
 - [ ] **Step 2: 写入可选 Makefile**
 
@@ -1322,53 +1364,20 @@ build:
 	wails build -clean -trimpath -ldflags "$(LDFLAGS)"
 ```
 
-- [ ] **Step 3: 更新 Windows 产品元数据**
-
-Open `build/windows/info.json` and set the product-facing fields to the following values while preserving the template schema:
-
-```json
-{
-  "fixed": {
-    "file_version": "0.0.0.0",
-    "product_version": "0.0.0.0"
-  },
-  "info": {
-    "0000": {
-      "CompanyName": "vvitem",
-      "FileDescription": "ItemAll Local-first SafeOps",
-      "FileVersion": "0.0.0-dev",
-      "InternalName": "ItemAll",
-      "LegalCopyright": "Copyright © 2026 vvitem",
-      "OriginalFilename": "ItemAll.exe",
-      "ProductName": "ItemAll",
-      "ProductVersion": "0.0.0-dev"
-    }
-  }
-}
-```
-
-Run:
-
-```powershell
-Get-Content build\windows\info.json | ConvertFrom-Json | Out-Null
-```
-
-Expected: JSON 解析成功。
-
-- [ ] **Step 4: 更新 README 开发说明**
+- [ ] **Step 3: 更新 README 中文开发说明**
 
 Append the following sections to `README.md`, preserving the existing product introduction:
 
-```markdown
-## Development baseline
+~~~~markdown
+## 开发环境基线
 
 - Go 1.26.5
 - Wails CLI v2.13.0
 - Node.js 24.18.0 LTS
 - pnpm 11.12.0
-- Windows 10/11 with WebView2
+- Windows 10/11 与 WebView2
 
-## Install tools
+## 安装开发工具
 
 ```powershell
 corepack enable
@@ -1377,7 +1386,7 @@ go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
 wails doctor
 ```
 
-## Install dependencies
+## 安装依赖
 
 ```powershell
 go mod download
@@ -1386,7 +1395,7 @@ pnpm install --frozen-lockfile
 Set-Location ..
 ```
 
-## Validate
+## 执行验证
 
 ```powershell
 go test ./...
@@ -1398,13 +1407,13 @@ pnpm build
 Set-Location ..
 ```
 
-## Run in development
+## 启动开发模式
 
 ```powershell
 wails dev
 ```
 
-## Build on Windows
+## Windows 生产构建
 
 ```powershell
 $commit = git rev-parse --short=12 HEAD
@@ -1412,10 +1421,10 @@ $buildTime = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 wails build -clean -trimpath -ldflags "-X github.com/vvitem/item_all/internal/buildinfo.Version=0.0.0-dev -X github.com/vvitem/item_all/internal/buildinfo.Commit=$commit -X github.com/vvitem/item_all/internal/buildinfo.BuildTime=$buildTime"
 ```
 
-The binary is written to `build/bin/ItemAll.exe`.
-```
+生成文件位于 `build/bin/ItemAll.exe`。
+~~~~
 
-- [ ] **Step 5: 运行全量自动验证**
+- [ ] **Step 4: 运行全量自动验证**
 
 ```powershell
 go test ./...
@@ -1428,9 +1437,9 @@ pnpm build
 Set-Location ..
 ```
 
-Expected: 所有命令成功；测试总数至少为 Go 4 个、前端 4 个。
+Expected: 所有命令成功；测试总数至少为 Go 3 个、前端 4 个。
 
-- [ ] **Step 6: 执行 Windows 生产构建**
+- [ ] **Step 5: 执行 Windows 生产构建**
 
 ```powershell
 $commit = git rev-parse --short=12 HEAD
@@ -1441,7 +1450,7 @@ Get-Item build\bin\ItemAll.exe
 
 Expected: `build/bin/ItemAll.exe` 存在且文件大小大于 0。
 
-- [ ] **Step 7: 执行 Windows 开发启动验证**
+- [ ] **Step 6: 执行 Windows 开发启动验证**
 
 ```powershell
 wails dev
@@ -1459,19 +1468,20 @@ Manual acceptance:
 
 关闭应用后，记录 Windows 版本、Go 版本、Wails 版本和验证日期到实现 PR 描述。
 
-- [ ] **Step 8: 扫描秘密和范围外能力**
+- [ ] **Step 7: 扫描秘密和范围外能力**
 
 ```powershell
-Get-ChildItem -Recurse -File -Exclude pnpm-lock.yaml,go.sum | Select-String -Pattern "BEGIN .*PRIVATE KEY|api[_-]?key|access[_-]?token|password\s*=|ssh\.exec|db\.execute|shell\.run" -CaseSensitive:$false
+Get-ChildItem main.go,app.go,wails.json,Makefile,internal,frontend\src,frontend\package.json -Recurse -File |
+  Select-String -Pattern "BEGIN .*PRIVATE KEY|api[_-]?key|access[_-]?token|password\s*=|ssh\.exec|db\.execute|shell\.run" -CaseSensitive:$false
 ```
 
-Expected: 没有真实秘密，也没有范围外工具接口。文档中描述禁止项的文字命中不算代码违规，必须人工确认命中路径。
+Expected: 没有命中真实秘密或范围外工具接口。
 
-- [ ] **Step 9: 提交桌面装配和开发文档**
+- [ ] **Step 8: 提交构建命令和开发文档**
 
 ```powershell
-git add main.go Makefile README.md build/windows/info.json go.mod go.sum
-git commit -m "build: wire ItemAll desktop application"
+git add Makefile README.md wails.json main.go go.mod go.sum
+git commit -m "build: document ItemAll desktop workflow"
 ```
 
 ---
@@ -1515,6 +1525,8 @@ M0-foundation：DONE=1, IN_REVIEW=1, 总任务=10
 ```markdown
 | ItemAll Scaffold | M0-002 | 2026-07-13-m0-002-project-scaffold-design.md | `main.go`, `app.go`, `internal/buildinfo`, `frontend/src` | `app_test.go`, `internal/buildinfo/info_test.go`, `frontend/src/App.test.tsx` | Issue #2 / 实现 PR | IN_REVIEW |
 ```
+
+Document headers must use the implementation branch base Commit and the actual Issue #2 URL。
 
 - [ ] **Step 2: 提交进度更新**
 
@@ -1580,20 +1592,20 @@ PR body must include:
 
 No SSH, database, SQLite business tables, AI, Operation Bus, cloud services, credentials or telemetry.
 
-Closes #2 after merge and post-merge status synchronization.
+Issue #2 is closed only after the implementation merge and the post-merge status synchronization.
 ```
 
 - [ ] **Step 5: 评审实现 PR**
 
 Review requirements:
 
-1. Changed files match this plan.
-2. Generated `wailsjs` files are not hand-edited.
-3. No dependencies use `latest`, `*`, caret or tilde ranges.
-4. No environment variables, secrets or remote assets appear.
-5. `GetAppInfo()` is the only Binding.
-6. All automatic checks and Windows manual checks have evidence.
-7. M0-002 remains `IN_REVIEW` until merge.
+1. Changed files match this plan。
+2. Generated `wailsjs` files are not hand-edited。
+3. No dependencies use `latest`, `*`, caret or tilde ranges。
+4. No environment variables, secrets or remote assets appear。
+5. `GetAppInfo()` is the only Binding。
+6. All automatic checks and Windows manual checks have evidence。
+7. M0-002 remains `IN_REVIEW` until merge。
 
 - [ ] **Step 6: 合并实现 PR 后创建状态同步分支**
 
@@ -1606,9 +1618,9 @@ M0-003: NOT_STARTED -> READY
 M0-foundation：DONE=2/10 = 20%
 ```
 
-Update `implementation-trace.md` with the actual PR number and merge Commit, and change Status to `DONE`.
+Update `implementation-trace.md` with the actual PR URL and the exact 40-character merge Commit returned by GitHub, and change Status to `DONE`。Do not write placeholder tokens in the document。
 
-- [ ] **Step 7: 合并状态同步 PR并关闭 Issue #2**
+- [ ] **Step 7: 合并状态同步 PR 并关闭 Issue #2**
 
 Use commit and PR title:
 
@@ -1616,18 +1628,7 @@ Use commit and PR title:
 docs: complete M0-002 and ready M0-003
 ```
 
-Close Issue #2 only after the docs-only synchronization PR is merged. The closing comment must include:
-
-```markdown
-M0-002 已完成并有以下证据：
-
-- 实现 PR：<actual PR number>
-- Merge Commit：<actual merge SHA>
-- Go 与前端自动测试通过
-- Windows `wails dev` 验证通过
-- Windows `wails build` 生成 `build/bin/ItemAll.exe`
-- 项目进度文档已同步
-```
+Close Issue #2 only after the docs-only synchronization PR is merged。The closing comment must directly include the real implementation PR URL, the real 40-character merge Commit, the automatic test result summary, the Windows `wails dev` result, the Windows `wails build` result and the merged progress-sync PR URL。Do not use unresolved variables or angle-bracket placeholders。
 
 ---
 
@@ -1647,12 +1648,14 @@ M0-002 已完成并有以下证据：
 | Frontend tests | `pnpm test:run` |
 | Frontend build | `pnpm build` |
 | 精确依赖 | `frontend/package.json`, `pnpm-lock.yaml`, `go.sum` |
-| 无范围外能力 | PR changed-files review and secret/scope scan |
-| 进度真实 | M0-002 merge前 `IN_REVIEW`，merge后 `DONE` |
+| 无范围外能力 | PR changed-files review and restricted secret/scope scan |
+| 进度真实 | M0-002 merge 前 `IN_REVIEW`，merge 后 `DONE` |
 
 ## Self-Review Result
 
 - Spec coverage: 已覆盖工程身份、根目录结构、构建信息、AppInfo、三态 UI、错误安全、精确依赖、Windows 开发与生产构建、范围边界和进度同步。
-- Placeholder scan: 没有未定义的实现占位项；需要替换的 PR 号和 Merge SHA 仅存在于合并后证据模板，并明确由实际 GitHub 结果填入。
+- Placeholder scan: 没有 `TBD`、未解析变量、角括号占位值或省略实现步骤。
 - Type consistency: Go `AppInfo` 与 TypeScript `AppInfo` 字段保持 `name`、`tagline`、`version`、`commit`、`buildTime`、`runtime`、`status` 一致。
+- Build ordering: `main.go` 和本地忽略的 `frontend/dist` bootstrap 在 Binding 生成前存在；真实 Vite 构建在生产构建前替换 bootstrap。
+- Wails config: 产品元数据来自 `wails.json.info`，不手工修改 `build/windows/info.json` 模板，也不写入虚构 `applicationID` 字段。
 - Scope: 本计划只实现 `M0-002`；`M0-003` CI、SQLite、Keychain、Operation Bus、SSH、数据库和 AI 均未混入。
