@@ -33,15 +33,15 @@
 - M0-002 设计和实现计划已分别通过 PR #4、PR #5 合并。
 - 完成 Go 1.26.5、Wails v2.13.0、React/TypeScript/Vite 工程骨架。
 - 完成只读 `GetAppInfo()` Binding、构建元数据和 Loading/Ready/Error/Retry 页面。
-- 临时 Windows 验证 Workflow 已从实现分支删除，没有提前落地 M0-003 CI。
+- 代码审查新增同步 Binding 异常回归测试，并统一同步抛错与异步 rejection 的安全错误处理。
+- 临时验证 Workflow 已从实现分支删除，没有提前落地 M0-003 CI。
 
 ## 下一步任务
 
-1. 完成 PR #6 的整体规范、代码质量和范围复核。
-2. 将 PR #6 标记为 Ready for Review，等待合并决策。
-3. PR #6 合并后通过独立文档 PR 将 `M0-002` 更新为 `DONE`。
-4. 合并后将 `M0-003` 更新为 `READY`，开始正式 CI 门禁设计。
-5. 在 M0-003 完成前不开始 SSH、数据库或 AI 功能。
+1. 将 PR #6 标记为 Ready for Review，等待合并决策。
+2. PR #6 合并后通过独立文档 PR 将 `M0-002` 更新为 `DONE`。
+3. 合并后将 `M0-003` 更新为 `READY`，开始正式 CI 门禁设计。
+4. 在 M0-003 完成前不开始 SSH、数据库或 AI 功能。
 
 ## 当前阻塞
 
@@ -67,7 +67,8 @@
 ## 测试状态
 
 - Go：`go test ./...` 通过，`internal/buildinfo` 竞态检测通过。
-- Frontend：4 个 Vitest 用例、TypeScript、ESLint、Vite production build 全部通过。
+- Frontend：5 个 Vitest 用例、TypeScript、ESLint、Vite production build 全部通过。
+- 错误回归：同步 Binding 抛错与异步 rejection 均进入安全错误页，不展示异常路径或秘密文本。
 - Wails Binding：仅生成 `GetAppInfo()`，生成文件和锁文件无漂移。
 - Windows Production：`ItemAll.exe` 构建成功，文件大小 11,413,504 bytes，启动烟测通过。
 - Windows Development：`wails dev` 完成编译、WebView2 初始化并进入目录监听。
@@ -86,7 +87,7 @@
 - [PR #4](https://github.com/vvitem/item_all/pull/4)：M0-002 设计，已合并。
 - [PR #5](https://github.com/vvitem/item_all/pull/5)：M0-002 实现计划，已合并，Merge Commit `47ad2e428a7db862195b871abbea42ac4c4e930d`。
 - [PR #6](https://github.com/vvitem/item_all/pull/6)：工程骨架实现，当前 `IN_REVIEW`。
-- 自动验证：Actions Run `29242978948`、`29243245959`、`29244060195`。
+- 自动验证：Actions Run `29242978948`、`29243245959`、`29244060195`、`29244941752`。
 
 ## 本周可演示结果
 
