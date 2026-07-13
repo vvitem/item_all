@@ -81,12 +81,39 @@ jobs:
           Remove-Item -Recurse -Force .wails-scaffold
           if ($trackedHash -ne $generatedHash) { throw 'Tracked Wails assets differ from v2.13.0 template' }
 
-      - name: Run build information contract
+      - name: Prepare embedded frontend bootstrap
         shell: pwsh
         run: |
-          go test ./internal/buildinfo -run TestCurrent -v
+          New-Item -ItemType Directory frontend\dist -Force | Out-Null
+          Set-Content frontend\dist\index.html '<!doctype html><html><body>ItemAll build bootstrap</body></html>'
+
+      - name: Run Go contracts
+        shell: pwsh
+        run: |
+          go mod tidy
+          go test ./... -v
           go test -race ./internal/buildinfo
 
-      - name: Run app binding contract
+      - name: Generate and verify Wails bindings
         shell: pwsh
-        run: go test . -run TestGetAppInfoReturnsSafeReadOnlyMetadata -v
+        run: |
+          wails generate module
+          $declaration = Get-Content frontend\wailsjs\go\main\App.d.ts -Raw
+          if ($declaration -notmatch 'GetAppInfo') { throw 'GetAppInfo binding was not generated' }
+          if ($declaration -match 'Shell|Database|Environment|FileSystem|Network') { throw 'Unexpected binding capability generated' }
+          $exports = ([regex]::Matches($declaration, 'export function')).Count
+          if ($exports -ne 1) { throw "Expected exactly one binding, found $exports" }
+
+      - name: Commit generated module files
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add go.mod go.sum frontend/wailsjs
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 1) {
+            git commit -m 'build: lock Go dependencies and Wails bindings'
+            git push origin HEAD:feat/m0-002-project-scaffold
+          } elseif ($LASTEXITCODE -ne 0) {
+            throw 'Unable to inspect generated files'
+          }
