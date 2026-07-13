@@ -28,6 +28,15 @@ jobs:
           go-version: '1.26.5'
           cache: false
 
+      - name: Cache Wails and Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/bin/wails.exe
+            ~/go/pkg/mod
+            ~/AppData/Local/go-build
+          key: wails-${{ runner.os }}-v2.13.0-go1.26.5
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -43,8 +52,13 @@ jobs:
       - name: Install Wails CLI
         shell: pwsh
         run: |
-          go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
-          $wailsVersion = (wails version | Out-String).Trim()
+          $goBin = Join-Path (go env GOPATH) 'bin'
+          $wailsPath = Join-Path $goBin 'wails.exe'
+          if (-not (Test-Path $wailsPath)) {
+            go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+          }
+          $goBin | Out-File -FilePath $env:GITHUB_PATH -Append
+          $wailsVersion = (& $wailsPath version | Out-String).Trim()
           Write-Host $wailsVersion
           if ($wailsVersion -notmatch 'v2\.13\.0') { throw 'Unexpected Wails version' }
 
@@ -69,4 +83,6 @@ jobs:
 
       - name: Run build information contract
         shell: pwsh
-        run: go test ./internal/buildinfo -run TestCurrent -v
+        run: |
+          go test ./internal/buildinfo -run TestCurrent -v
+          go test -race ./internal/buildinfo
