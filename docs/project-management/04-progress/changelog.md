@@ -1,11 +1,36 @@
 > 状态：维护中  
 > 负责人：vvitem  
 > 最后更新：2026-07-13  
-> 基线 Commit：`47ad2e428a7db862195b871abbea42ac4c4e930d`  
+> 基线 Commit：`dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：[Issue #2](https://github.com/vvitem/item_all/issues/2) · [PR #6](https://github.com/vvitem/item_all/pull/6)
+> 关联 Issue/PR：[PR #6](https://github.com/vvitem/item_all/pull/6) · [Issue #7](https://github.com/vvitem/item_all/issues/7)
 
 # 项目管理变更日志
+
+## 2026-07-13 — M0-002 完成同步
+
+### Added
+
+- 创建 [Issue #7](https://github.com/vvitem/item_all/issues/7)，跟踪 `M0-003` 正式 CI 门禁。
+- 为 M0-003 记录 Go、Frontend、Windows build、Binding 漂移、Secret Scan 和故意失败验收要求。
+
+### Changed
+
+- [PR #6](https://github.com/vvitem/item_all/pull/6) 已 squash 合并，Merge Commit `dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`。
+- `M0-002` 从 `IN_REVIEW` 更新为 `DONE`。
+- `M0-003` 从 `NOT_STARTED` 更新为 `READY`。
+- 项目状态更新为 `DONE=2`、`READY=1`、`NOT_STARTED=47`。
+- `M0-foundation` 完成度更新为 `2/10 = 20%`，全项目完成度更新为 `2/50 = 4%`。
+- 当前基线更新为 M0-002 Merge Commit。
+
+### Validation
+
+- M0-002 以 PR #6、Merge Commit、Go/Frontend 测试、Windows production/dev smoke 和安全边界扫描作为完成证据。
+- 状态同步只修改项目管理文档，没有修改业务代码。
+
+### Business Code
+
+- 未修改业务代码。
 
 ## 2026-07-13 — M0-002 实现评审
 
