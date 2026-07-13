@@ -1,0 +1,66 @@
+name: M0-002 bootstrap
+
+on:
+  push:
+    branches:
+      - feat/m0-002-project-scaffold
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/m0-002-project-scaffold
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.5'
+          cache: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+
+      - name: Enable pnpm
+        shell: pwsh
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.12.0 --activate
+          if ((pnpm --version) -ne '11.12.0') { throw 'Unexpected pnpm version' }
+
+      - name: Install Wails CLI
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+          wails version
+
+      - name: Generate official platform resources
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force .wails-scaffold -ErrorAction SilentlyContinue
+          wails init -n ItemAll -d .wails-scaffold -t react-ts -q
+          Copy-Item .wails-scaffold\build . -Recurse -Force
+          Remove-Item -Recurse -Force .wails-scaffold
+          if (-not (Test-Path build\appicon.png)) { throw 'Missing appicon.png' }
+          if (-not (Test-Path build\windows\icon.ico)) { throw 'Missing Windows icon' }
+          if (-not (Test-Path build\windows\info.json)) { throw 'Missing Windows version template' }
+          if (Select-String -Path wails.json -Pattern 'applicationID' -Quiet) { throw 'Unsupported applicationID field found' }
+
+      - name: Commit generated assets
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add build
+          if (-not (git diff --cached --quiet)) {
+            git commit -m 'build: add official Wails platform assets'
+            git push origin HEAD:feat/m0-002-project-scaffold
+          }
