@@ -1,11 +1,43 @@
 > 状态：维护中  
 > 负责人：vvitem  
-> 最后更新：2026-07-13  
-> 基线 Commit：`dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`  
+> 最后更新：2026-07-14  
+> 基线 Commit：`cf25d4e40f34e0c2e835a2cc04b3eeea4d011ad7`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：[PR #6](https://github.com/vvitem/item_all/pull/6) · [Issue #7](https://github.com/vvitem/item_all/issues/7)
+> 关联 Issue/PR：[Issue #7](https://github.com/vvitem/item_all/issues/7) · [PR #11](https://github.com/vvitem/item_all/pull/11)
 
 # 项目管理变更日志
+
+## 2026-07-14 — M0-003 实现评审
+
+### Added
+
+- 新增 `.github/workflows/ci.yml`，建立 `quality`、`generated-and-security`、`windows-build` 三个稳定 Job。
+- 新增 `scripts/ci` Go 检查器，覆盖依赖精确版本、pnpm `allowBuilds`、Workflow 安全、远程资源、环境变量读取、范围外能力和 Wails Binding Allowlist。
+- 新增 Windows `ItemAll.exe` 启动观察与进程树清理脚本。
+- 新增 `docs/development/ci.md`，记录本地复现、故障排查、Action SHA、Gitleaks、Binding 漂移和 Branch Protection 自举。
+- 新增完整历史 Gitleaks v8.30.0 扫描与三类生成漂移门禁。
+
+### Changed
+
+- `M0-003` 从 `READY` 更新为 `IN_REVIEW`，关联 [PR #11](https://github.com/vvitem/item_all/pull/11)。
+- 项目状态更新为 `DONE=2`、`IN_REVIEW=1`、`NOT_STARTED=47`。
+- 所有 Action 使用官方完整 Commit SHA；Workflow 权限固定为 `contents: read`。
+- Linux Wails Binding 生成后恢复普通文件模式 `0644`，再执行严格内容与模式 diff。
+- Gitleaks 安装路径使用 v8.30.0 `go.mod` 声明的 `github.com/zricethezav/gitleaks/v8`。
+
+### Validation
+
+- Actions Run `29312670714`：三个 Job 全部成功。
+- Go format/vet/test/race、Frontend test/typecheck/lint/build 通过。
+- 实际 Workflow 自检、依赖政策、仓库边界、Binding/Go Module/pnpm Lockfile 漂移通过。
+- 完整历史 Gitleaks 通过。
+- Windows Wails production build、非空 EXE 和启动烟测通过。
+- 临时 Binding 诊断 Workflow 已删除；最终只保留正式 CI Workflow。
+- 受控 RED→GREEN 证明仍待完成，因此 M0-003 不提前标记 `DONE`。
+
+### Business Code
+
+- 未新增 SSH、数据库、SQLite 业务表、AI、Operation Bus、凭据、云服务、遥测或发布功能。
 
 ## 2026-07-13 — M0-002 完成同步
 
