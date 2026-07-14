@@ -1,112 +1,88 @@
 > 状态：维护中  
 > 负责人：vvitem  
 > 最后更新：2026-07-14  
-> 基线 Commit：`cf25d4e40f34e0c2e835a2cc04b3eeea4d011ad7`  
+> 基线 Commit：`620272272991ec47a39458e2dcb03a0ca7648e95`  
 > 关联 Milestone：`M0-foundation`  
-> 关联 Issue/PR：[Issue #7](https://github.com/vvitem/item_all/issues/7) · [PR #11](https://github.com/vvitem/item_all/pull/11)
+> 关联 Issue/PR：[Issue #7](https://github.com/vvitem/item_all/issues/7) · [PR #11](https://github.com/vvitem/item_all/pull/11) · [Issue #12](https://github.com/vvitem/item_all/issues/12)
 
 # 当前项目状态
 
 ## 基线信息
 
 - 基线分支：`main`
-- 当前基线 Commit：`cf25d4e40f34e0c2e835a2cc04b3eeea4d011ad7`
-- 实现分支：`feat/m0-003-ci-gates`
+- 当前基线 Commit：`620272272991ec47a39458e2dcb03a0ca7648e95`
+- 当前活动项：`M0-004`
 - 最后更新时间：2026-07-14
 - 当前 Milestone：`M0-foundation`
 - 当前周次：第 2 周
-- 项目状态：`DONE=2`、`IN_REVIEW=1`、`NOT_STARTED=47`
-
-## 本阶段目标
-
-建立可构建的 Go/Wails/React 工程骨架、正式 CI 门禁、SQLite WAL、OS Keychain、Operation Bus、append-only Audit，以及 SSH 资产连接测试垂直切片。
+- 项目状态：`DONE=3`、`READY=1`、`NOT_STARTED=46`
 
 ## 当前正在进行
 
-- `M0-003`：正式分层 CI 门禁已实现，状态 `IN_REVIEW`。
-- 实现 PR：[PR #11](https://github.com/vvitem/item_all/pull/11)。
-- 三个稳定 Job：`quality`、`generated-and-security`、`windows-build`。
-- GREEN 基线：Actions Run `29312670714` 三个 Job全部成功。
-- RED→GREEN 证明：RED Run `29313493020`、GREEN Run `29313730163`。
-- 代码审查回归：RED Run `29314236649`、修复 GREEN Run `29314452432`。
-- 当前剩余工作：最终 Head 全量 GREEN、PR 转 Ready、合并与 Branch Protection 自举。
-- 在 M0-003 完成前不开始 SSH、数据库或 AI 功能。
+- `M0-004`：SQLite WAL、Migration 和 Repository 骨架，状态 `READY`。
+- 跟踪 Issue：[Issue #12](https://github.com/vvitem/item_all/issues/12)。
+- 下一阶段先完成设计 Spec 与 Implementation Plan，批准前不写持久化实现。
+- 设计需冻结 SQLite Driver、Migration 方案、数据目录和 Repository/Tx 边界。
 
 ## 最近完成
 
-- M0-003 设计通过 [PR #9](https://github.com/vvitem/item_all/pull/9) 合并，Merge Commit `3cc4039fcf88882f54be55029541b2f9b638c1d2`。
-- M0-003 实现计划通过 [PR #10](https://github.com/vvitem/item_all/pull/10) 合并，Merge Commit `cf25d4e40f34e0c2e835a2cc04b3eeea4d011ad7`。
-- 建立只读权限、固定 Action SHA、固定 Runner 和固定工具链的三 Job Workflow。
-- 建立 `scripts/ci` Go 检查器，覆盖依赖政策、Workflow 安全和仓库范围边界。
-- 建立完整历史 Gitleaks、Binding/Go Module/pnpm Lockfile 漂移检查。
-- 建立 Windows Wails production build、EXE 存在性和启动烟测。
-- 修复 Linux Wails Binding 生成造成的文件模式噪声：生成后恢复 `0644`，内容漂移仍严格阻断。
-- 删除所有临时诊断 Workflow，正式分支只保留 `.github/workflows/ci.yml`。
-- 受控提交未格式化 Go Fixture 后，RED Run 仅由 `quality` 的格式门禁失败；安全和 Windows Job 均成功。
-- 删除 Fixture 后，GREEN Run `29313730163` 三个 Job 全部恢复成功。
-- 整分支代码审查发现并修复：普通 JavaScript `// comment` 远程资源误报，以及额外 pnpm workspace 路径未被拒绝。
-- 新增回归测试先在 Run `29314236649` 失败，最小修复后 Run `29314452432` 三个 Job 全部成功。
+- `M0-003` 已通过 [PR #11](https://github.com/vvitem/item_all/pull/11) squash 合并，Merge Commit `620272272991ec47a39458e2dcb03a0ca7648e95`。
+- 正式 CI 包含三个稳定 Job：`quality`、`generated-and-security`、`windows-build`。
+- 最终 PR Head Run `29314687975` 三个 Job 全部成功。
+- 受控门禁证明：RED Run `29313493020` 精确阻断未格式化 Go，GREEN Run `29313730163` 恢复全绿。
+- 代码审查回归证明：RED Run `29314236649` 复现策略缺陷，GREEN Run `29314452432` 完成修复。
+- `main` 已配置 Ruleset：PR 合并、分支最新、三个 required checks、禁止删除和 force push。
 
 ## 下一步任务
 
-1. 确认状态文档收尾后的最终 Head 三个 Job 全绿，且无 `red_gate_probe.go` 或临时 Workflow。
-2. 将 PR #11 转为 Ready for Review并执行合并门检查。
-3. 合并后配置 `quality`、`generated-and-security`、`windows-build` 为 `main` required checks。
-4. 通过独立状态同步 PR 将 `M0-003` 更新为 `DONE`；此前 `M0-004` 保持 `NOT_STARTED`。
+1. 合并本状态同步 PR，验证 `quality`、`generated-and-security`、`windows-build` 作为 required checks 生效。
+2. 将 Issue #7 按 completed 关闭。
+3. 编写 M0-004 SQLite/Repository 设计 Spec。
+4. 设计批准后编写 Implementation Plan，再进入实现。
 
 ## 当前阻塞
 
-无实现阻塞。当前仅剩 M0-003 的最终 Head 验证、合并和 Branch Protection 自举。
+无。
 
 ## 高风险事项
 
-- required check 名称进入 Branch Protection 后不得随意修改。
-- Secret Scan 必须保持 `fetch-depth: 0`，否则无法覆盖完整历史。
-- Wails Linux 生成文件模式差异必须先规范化，再执行内容与模式漂移检查。
-- Operation Bus 尚未实现，后续运维能力不得绕过其设计边界。
-- Windows Keychain/PTTY/WebView 的后续兼容风险仍需独立验证。
+- SQLite Driver 选择会影响 CGO、Windows 构建、二进制体积和跨平台维护成本。
+- Migration 必须 fail-closed、可重复执行，并具备损坏数据库与锁冲突测试。
+- Repository 不得把 `*sql.DB` 暴露给 UI/Wails Binding。
+- required check 名称不得随意修改，否则 Ruleset 会失效。
 
 ## 待确认决策
 
+- SQLite Driver：`modernc.org/sqlite` 或 `github.com/mattn/go-sqlite3`。
+- Migration：内嵌 SQL 最小 runner 或成熟 migration 库。
 - Windows Credential Manager 封装方案。
 - 手工 SQL 写操作是否进入首版。
 - Windows 稳定版代码签名方案。
 
 ## 范围变化
 
-无。M0-003 只建立工程质量和安全门禁，没有引入 SSH、数据库、SQLite 业务表、AI、Operation Bus、凭据、云服务、遥测或发布能力。
+无。M0-004 仅建立本地持久化底座，不包含 CredentialRef、Operation Bus、AuditEvent 业务模型、SSH、数据库运维、AI、云同步或遥测。
 
 ## 测试状态
 
-- CI Policy：依赖、Workflow 与仓库边界单元测试通过。
-- `quality`：Go format/vet/test/race、5 个 Vitest、TypeScript、ESLint、Vite build 全部通过。
-- `generated-and-security`：固定工具安装、实际 Workflow 自检、三类漂移、完整历史 Gitleaks 全部通过。
-- `windows-build`：Go tests、Wails build、非空 `ItemAll.exe` 和启动烟测通过。
-- GREEN 基线：Actions Run `29312670714`。
-- 文档同步 GREEN：Actions Run `29313298880`。
-- RED Run `29313493020`：只有 `quality → Verify Go module and formatting` 失败；另外两个 Job 成功。
-- GREEN Run `29313730163`：删除受控 Fixture 后三个 Job 全部成功。
-- 审查 RED Run `29314236649`：新增策略回归测试在旧实现上失败。
-- 审查 GREEN Run `29314452432`：修复后新增测试与三个 Job 全部成功。
+- CI Policy、Go、Frontend、生成漂移、完整历史 Gitleaks 和 Windows Wails build 均已在 PR #11 验证。
+- 最终 Head GREEN：Actions Run `29314687975`。
+- 本状态同步 PR 必须通过三个 required checks 后才能合并。
 
 ## 相关代码路径
 
 - `.github/workflows/ci.yml`
-- `scripts/ci/*.go`、`scripts/ci/*_test.go`
-- `scripts/ci/smoke-windows.ps1`
+- `scripts/ci/**`
 - `docs/development/ci.md`
-- `README.md`
+- 下一阶段建议：`internal/storage`、`internal/storage/migrations`、`internal/repository`
 
 ## 相关 Issue / PR / Commit
 
-- [Issue #7](https://github.com/vvitem/item_all/issues/7)：M0-003 CI 门禁，Open。
-- [PR #9](https://github.com/vvitem/item_all/pull/9)：M0-003 设计，已合并。
-- [PR #10](https://github.com/vvitem/item_all/pull/10)：M0-003 实现计划，已合并。
-- [PR #11](https://github.com/vvitem/item_all/pull/11)：M0-003 实现，当前 `IN_REVIEW`。
-- GREEN 基线：Actions Run `29312670714`。
-- RED→GREEN：Actions Run `29313493020` → `29313730163`。
-- 代码审查 RED→GREEN：Actions Run `29314236649` → `29314452432`。
+- [Issue #7](https://github.com/vvitem/item_all/issues/7)：M0-003 CI 门禁，待本状态同步 PR 合并后关闭。
+- [PR #11](https://github.com/vvitem/item_all/pull/11)：M0-003 实现，已合并。
+- Merge Commit：`620272272991ec47a39458e2dcb03a0ca7648e95`。
+- [Issue #12](https://github.com/vvitem/item_all/issues/12)：M0-004，`READY`。
 
 ## 本周可演示结果
 
-任意 Pull Request 可并行获得 Go/Frontend 质量反馈、生成与安全边界检查以及 Windows Wails 构建事实；受控失败和代码审查回归均已通过 RED→GREEN 证明门禁有效。
+任意 Pull Request 必须通过 Go/Frontend 质量、生成与安全边界、Windows Wails 构建三个 required checks 后才能合并；下一阶段开始建立本地 SQLite 持久化底座。

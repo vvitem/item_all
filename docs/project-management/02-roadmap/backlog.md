@@ -1,20 +1,20 @@
 > 状态：维护中  
 > 负责人：vvitem  
 > 最后更新：2026-07-14  
-> 基线 Commit：`cf25d4e40f34e0c2e835a2cc04b3eeea4d011ad7`  
+> 基线 Commit：`620272272991ec47a39458e2dcb03a0ca7648e95`  
 > 关联 Milestone：`M0-foundation → M4-beta`  
-> 关联 Issue/PR：[Issue #7](https://github.com/vvitem/item_all/issues/7) · [PR #11](https://github.com/vvitem/item_all/pull/11)
+> 关联 Issue/PR：[Issue #7](https://github.com/vvitem/item_all/issues/7) · [PR #11](https://github.com/vvitem/item_all/pull/11) · [Issue #12](https://github.com/vvitem/item_all/issues/12)
 
 # Backlog
 
-状态只允许：`NOT_STARTED`、`READY`、`IN_PROGRESS`、`BLOCKED`、`IN_REVIEW`、`DONE`、`DEFERRED`、`CANCELLED`。当前共 50 项：`DONE=2`，`IN_REVIEW=1`，`NOT_STARTED=47`。
+状态只允许：`NOT_STARTED`、`READY`、`IN_PROGRESS`、`BLOCKED`、`IN_REVIEW`、`DONE`、`DEFERRED`、`CANCELLED`。当前共 50 项：`DONE=3`，`READY=1`，`NOT_STARTED=46`。
 
 | ID | Milestone | Epic | 模块 | 任务 | 优先级 | 状态 | 依赖 | 验收标准 | 代码路径 | 测试 | Issue/PR | 阻塞原因 | 下一步 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | M0-001 | M0-foundation | Project Foundation | docs | 建立项目管理、ADR、进度和交付文档体系 | P0 | DONE | 无 | 所有文件非空、状态基于真实仓库、创建并合并 PR | docs/project-management/** | 链接与完整性检查 | [PR #1](https://github.com/vvitem/item_all/pull/1) / `be37cfb` | 无 | 已完成，持续维护 |
 | M0-002 | M0-foundation | Project Foundation | build | 初始化 Go/Wails/React 单仓 | P0 | DONE | M0-001 | Windows 本地可启动空壳，版本信息可见 | `main.go`, `app.go`, `internal/buildinfo`, `frontend/`, `build/` | Go tests/race、Vitest/typecheck/lint/build、Windows build/dev smoke | [Issue #2](https://github.com/vvitem/item_all/issues/2) / [PR #6](https://github.com/vvitem/item_all/pull/6) / `dbb104e` | 无 | 已完成，持续维护 |
-| M0-003 | M0-foundation | Quality | ci | 建立 Go/前端 lint、test、Windows build、secret scan | P0 | IN_REVIEW | M0-002 | PR 必须通过全部门禁 | `.github/workflows/ci.yml`, `scripts/ci/`, `docs/development/ci.md` | Policy tests、Go/Frontend、三类漂移、完整历史 Gitleaks、Windows build/smoke；GREEN `29312670714` | [Issue #7](https://github.com/vvitem/item_all/issues/7) / [PR #11](https://github.com/vvitem/item_all/pull/11) | 无 | 完成受控 RED→GREEN、评审、合并和 required checks 自举 |
-| M0-004 | M0-foundation | Storage | database | 建立 SQLite WAL、Migration 和 Repository 骨架 | P0 | NOT_STARTED | M0-002 | 首次启动迁移成功；重复运行幂等 | 建议：internal/storage, migrations/ | migration integration test | 待创建 | 无 | M0-003 完成后确定 migration 库 |
+| M0-003 | M0-foundation | Quality | ci | 建立 Go/前端 lint、test、Windows build、secret scan | P0 | DONE | M0-002 | PR 必须通过全部门禁 | `.github/workflows/ci.yml`, `scripts/ci/`, `docs/development/ci.md` | Policy tests、Go/Frontend、三类漂移、完整历史 Gitleaks、Windows build/smoke；最终 GREEN `29314687975` | [Issue #7](https://github.com/vvitem/item_all/issues/7) / [PR #11](https://github.com/vvitem/item_all/pull/11) / `6202722` | 无 | 已完成，持续维护 required checks |
+| M0-004 | M0-foundation | Storage | database | 建立 SQLite WAL、Migration 和 Repository 骨架 | P0 | READY | M0-002,M0-003 | 首次启动迁移成功；重复运行幂等 | 建议：internal/storage, migrations/ | migration integration test | [Issue #12](https://github.com/vvitem/item_all/issues/12) | 无 | 编写设计 Spec，冻结 Driver/Migration/Repository 边界 |
 | M0-005 | M0-foundation | Identity | security | 实现 workspace/actor/device 本地身份模型 | P1 | NOT_STARTED | M0-004 | 默认本地身份可追踪且不需要账号 | 建议：internal/identity | repository tests | 待创建 | 无 | 定义 ID 策略 |
 | M0-006 | M0-foundation | Credential | security | 实现 CredentialRef 与 OS Keychain 接口 | P0 | NOT_STARTED | M0-004 | SQLite/日志无明文；Keychain 失败 fail-closed | 建议：internal/security/credential | fake keychain + Windows test | 待创建 | 无 | 完成 Windows PoC |
 | M0-007 | M0-foundation | Operation Bus | operation | 实现 OperationRequest、流水线和假适配器 | P0 | NOT_STARTED | M0-004,M0-005 | UI 服务不能直接调用适配器；请求有 TraceID | 建议：internal/operation | pipeline unit tests | 待创建 | 无 | 先定义接口 |
