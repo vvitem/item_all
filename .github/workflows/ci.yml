@@ -207,16 +207,21 @@ jobs:
         shell: bash
         run: GOFLAGS='-tags=webkit2_41' wails generate module
 
-      - name: Verify module and lockfile drift
+      - name: Verify Go module drift
         shell: bash
         run: |
           go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: Verify pnpm lockfile drift
+        shell: bash
+        run: |
           pnpm --dir frontend install --frozen-lockfile
-          git diff --exit-code -- \
-            go.mod \
-            go.sum \
-            frontend/pnpm-lock.yaml \
-            frontend/wailsjs
+          git diff --exit-code -- frontend/pnpm-lock.yaml
+
+      - name: Verify Wails binding drift
+        shell: bash
+        run: git diff --exit-code -- frontend/wailsjs
 
       - name: Scan full Git history for secrets
         shell: bash
