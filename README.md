@@ -2,7 +2,7 @@
 
 Local-first SafeOps 桌面工作台，面向个人开发者、独立运维和全栈工程师，聚焦 Linux 故障诊断与 MySQL/PostgreSQL 数据库运维。
 
-> 当前状态：项目处于 `M0-foundation` 工程骨架阶段。实现状态以 [项目管理入口](docs/project-management/README.md) 为准。
+> 当前状态：项目处于 `M0-foundation` 工程底座阶段。实现状态以 [项目管理入口](docs/project-management/README.md) 为准。
 
 ## 项目原则
 
@@ -52,6 +52,8 @@ Set-Location ..
 ## 执行验证
 
 ```powershell
+go test ./scripts/ci -v
+go run ./scripts/ci all
 go test ./...
 Set-Location frontend
 pnpm typecheck
@@ -84,6 +86,9 @@ wails build -clean -trimpath -ldflags "-X github.com/vvitem/item_all/internal/bu
 - [六个月路线图](docs/project-management/02-roadmap/six-month-roadmap.md)
 - [后端架构](docs/project-management/03-backend-design/architecture-overview.md)
 - [MVP 范围](docs/project-management/01-analysis/mvp-scope.md)
+- [CI 门禁与本地复现](docs/development/ci.md)：Go、Frontend、生成文件、安全扫描和 Windows Wails 构建。
 - [M0-002 设计](docs/superpowers/specs/2026-07-13-m0-002-project-scaffold-design.md)
 - [M0-002 实现计划](docs/superpowers/plans/2026-07-13-m0-002-project-scaffold.md)
+- [M0-003 CI 设计](docs/superpowers/specs/2026-07-13-m0-003-ci-gates-design.md)
+- [M0-003 CI 实现计划](docs/superpowers/plans/2026-07-14-m0-003-ci-gates.md)
 - [原始增强版规划](docs/project-management/00-reference/OpsKat_项目深度分析与差异化产品规划_增强版.md)

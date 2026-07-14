@@ -1,0 +1,309 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.26.5'
+  NODE_VERSION: '24.18.0'
+  PNPM_VERSION: '11.12.0'
+  WAILS_VERSION: 'v2.13.0'
+  GITLEAKS_VERSION: 'v8.30.0'
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable exact pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          test "$(pnpm --version)" = "${PNPM_VERSION}"
+
+      - name: Resolve pnpm store
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install Ubuntu Wails dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential \
+            pkg-config \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev
+
+      - name: Verify toolchain
+        shell: bash
+        run: |
+          test "$(go env GOVERSION)" = "go${GO_VERSION}"
+          test "$(node --version)" = "v${NODE_VERSION}"
+          test "$(pnpm --version)" = "${PNPM_VERSION}"
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend for Go embed
+        working-directory: frontend
+        run: pnpm build
+
+      - name: Test CI policy code
+        shell: bash
+        run: go test ./scripts/ci -v
+
+      - name: Verify Go module and formatting
+        shell: bash
+        run: |
+          go mod download
+          go mod verify
+          mapfile -t go_files < <(git ls-files '*.go')
+          unformatted="$(gofmt -l "${go_files[@]}")"
+          if [[ -n "$unformatted" ]]; then
+            printf 'Go files require gofmt:\n%s\nRun: gofmt -w %s\n' "$unformatted" "$unformatted"
+            exit 1
+          fi
+
+      - name: Run Go vet and tests
+        shell: bash
+        run: |
+          go vet -tags=webkit2_41 ./...
+          go test -tags=webkit2_41 ./...
+          go test -race ./internal/buildinfo
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: pnpm test:run
+
+      - name: Run frontend typecheck
+        working-directory: frontend
+        run: pnpm typecheck
+
+      - name: Run frontend lint
+        working-directory: frontend
+        run: pnpm lint
+
+  generated-and-security:
+    name: generated-and-security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable exact pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare "pnpm@${PNPM_VERSION}" --activate
+          test "$(pnpm --version)" = "${PNPM_VERSION}"
+
+      - name: Resolve pnpm store
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install Ubuntu Wails dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential \
+            pkg-config \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev
+
+      - name: Install exact Wails CLI
+        shell: bash
+        run: |
+          go install "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VERSION}"
+          wails version
+
+      - name: Install exact Gitleaks CLI
+        shell: bash
+        run: |
+          go install "github.com/zricethezav/gitleaks/v8@${GITLEAKS_VERSION}"
+          gitleaks version
+
+      - name: Install frontend dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Build frontend for Go embed
+        run: pnpm --dir frontend build
+
+      - name: Verify workflow and dependency policy
+        shell: bash
+        run: |
+          go run ./scripts/ci workflow
+          go run ./scripts/ci dependencies
+          go run ./scripts/ci boundary
+
+      - name: Regenerate Wails bindings
+        shell: bash
+        run: GOFLAGS='-tags=webkit2_41' wails generate module
+
+      - name: Normalise generated binding file modes
+        shell: bash
+        run: find frontend/wailsjs -type f -exec chmod 0644 {} +
+
+      - name: Verify Go module drift
+        shell: bash
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: Verify pnpm lockfile drift
+        shell: bash
+        run: |
+          pnpm --dir frontend install --frozen-lockfile
+          git diff --exit-code -- frontend/pnpm-lock.yaml
+
+      - name: Verify Wails binding drift
+        shell: bash
+        run: git diff --exit-code -- frontend/wailsjs
+
+      - name: Scan full Git history for secrets
+        shell: bash
+        run: gitleaks git --redact --no-banner .
+
+  windows-build:
+    name: windows-build
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable exact pnpm
+        shell: pwsh
+        run: |
+          corepack enable
+          corepack prepare "pnpm@$env:PNPM_VERSION" --activate
+          if ((pnpm --version) -ne $env:PNPM_VERSION) {
+            throw "pnpm version does not match $env:PNPM_VERSION"
+          }
+
+      - name: Resolve pnpm store
+        id: pnpm-store
+        shell: pwsh
+        run: '"path=$(pnpm store path --silent)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append'
+
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install exact Wails CLI
+        shell: pwsh
+        run: |
+          go install "github.com/wailsapp/wails/v2/cmd/wails@$env:WAILS_VERSION"
+          wails version
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend for Go embed
+        working-directory: frontend
+        run: pnpm build
+
+      - name: Run Go tests
+        run: go test ./...
+
+      - name: Build ItemAll
+        run: wails build -clean -trimpath
+
+      - name: Verify executable exists
+        shell: pwsh
+        run: |
+          $item = Get-Item -LiteralPath build/bin/ItemAll.exe
+          if ($item.Length -le 0) {
+            throw 'build/bin/ItemAll.exe is empty.'
+          }
+          Write-Host "ItemAll.exe size: $($item.Length) bytes"
+
+      - name: Smoke test ItemAll
+        shell: pwsh
+        run: ./scripts/ci/smoke-windows.ps1 -Executable build/bin/ItemAll.exe -ObservationSeconds 10

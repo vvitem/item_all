@@ -1,9 +1,9 @@
 > 状态：维护中  
 > 负责人：vvitem  
-> 最后更新：2026-07-13  
-> 基线 Commit：`dbb104e3b457d0ef83ca563ff2ae6106c74b43a1`  
+> 最后更新：2026-07-14  
+> 基线 Commit：`cf25d4e40f34e0c2e835a2cc04b3eeea4d011ad7`  
 > 关联 Milestone：`M0-foundation → M4-beta`  
-> 关联 Issue/PR：[PR #6](https://github.com/vvitem/item_all/pull/6) · [Issue #7](https://github.com/vvitem/item_all/issues/7)
+> 关联 Issue/PR：[Issue #7](https://github.com/vvitem/item_all/issues/7) · [PR #11](https://github.com/vvitem/item_all/pull/11)
 
 # 任务追踪
 
@@ -13,8 +13,8 @@
 |---|---|---|---|---|---|---|---|---|
 | M0-001 | M0-foundation | 建立项目管理、ADR、进度和交付文档体系 | P0 | DONE | 无 | 所有文件非空、状态基于真实仓库、PR 已合并 | [PR #1](https://github.com/vvitem/item_all/pull/1) / `be37cfb` | 持续维护 |
 | M0-002 | M0-foundation | 初始化 Go/Wails/React 单仓 | P0 | DONE | M0-001 | Windows 本地可启动空壳，版本信息可见 | [Issue #2](https://github.com/vvitem/item_all/issues/2) / [PR #6](https://github.com/vvitem/item_all/pull/6) / `dbb104e` | 已完成，持续维护 |
-| M0-003 | M0-foundation | 建立 Go/前端 lint、test、Windows build、secret scan | P0 | READY | M0-002 | PR 必须通过全部门禁 | [Issue #7](https://github.com/vvitem/item_all/issues/7) | 编写设计 Spec 与实施计划 |
-| M0-004 | M0-foundation | 建立 SQLite WAL、Migration 和 Repository 骨架 | P0 | NOT_STARTED | M0-002 | 首次启动迁移成功；重复运行幂等 | 待创建 | 确定 migration 库 |
+| M0-003 | M0-foundation | 建立 Go/前端 lint、test、Windows build、secret scan | P0 | IN_REVIEW | M0-002 | PR 必须通过全部门禁 | [Issue #7](https://github.com/vvitem/item_all/issues/7) / [PR #11](https://github.com/vvitem/item_all/pull/11) | 完成受控 RED→GREEN、评审、合并和 required checks 自举 |
+| M0-004 | M0-foundation | 建立 SQLite WAL、Migration 和 Repository 骨架 | P0 | NOT_STARTED | M0-002 | 首次启动迁移成功；重复运行幂等 | 待创建 | M0-003 完成后确定 migration 库 |
 | M0-006 | M0-foundation | 实现 CredentialRef 与 OS Keychain 接口 | P0 | NOT_STARTED | M0-004 | SQLite/日志无明文；Keychain 失败 fail-closed | 待创建 | 完成 Windows PoC |
 | M0-007 | M0-foundation | 实现 OperationRequest、流水线和假适配器 | P0 | NOT_STARTED | M0-004,M0-005 | UI 服务不能直接调用适配器；请求有 TraceID | 待创建 | 先定义接口 |
 | M0-008 | M0-foundation | 实现 append-only AuditEvent | P0 | NOT_STARTED | M0-004,M0-007 | requested/completed/failed 事件完整且不可更新 | 待创建 | 确定 hash chain 是否首版启用 |
@@ -56,8 +56,8 @@
 ## 状态摘要
 
 - `DONE`: 2
-- `READY`: 1
-- `IN_REVIEW`: 0
+- `READY`: 0
+- `IN_REVIEW`: 1
 - `IN_PROGRESS`: 0
 - `BLOCKED`: 0
 - `NOT_STARTED`: 47
