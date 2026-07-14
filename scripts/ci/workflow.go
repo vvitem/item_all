@@ -7,7 +7,8 @@ import (
 	"strings"
 )
 
-var pinnedAction = regexp.MustCompile(`^\s*-\s+uses:\s+([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([0-9a-f]{40})\s+#\s+v[0-9][^\s]*\s*$`)
+var pinnedAction = regexp.MustCompile(`^\s*(?:-\s+)?uses:\s+([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([0-9a-f]{40})\s+#\s+v[0-9][^\s]*\s*$`)
+var writePermission = regexp.MustCompile(`(?m)^\s+[A-Za-z][A-Za-z-]*:\s*write\s*$`)
 
 var requiredActions = map[string]string{
 	"actions/checkout":   "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
@@ -50,8 +51,8 @@ func checkWorkflow(root string) Violations {
 			violations.Add(".github/workflows/ci.yml", rule, fmt.Sprintf("forbidden token %q", token))
 		}
 	}
-	if strings.Contains(text, "contents: write") || strings.Contains(text, "actions: write") || strings.Contains(text, "security-events: write") {
-		violations.Add(".github/workflows/ci.yml", "permissions", "workflow must remain contents: read only")
+	if writePermission.MatchString(text) {
+		violations.Add(".github/workflows/ci.yml", "permissions", "workflow and jobs must not request write permissions")
 	}
 
 	expectedJobs := map[string]struct {
