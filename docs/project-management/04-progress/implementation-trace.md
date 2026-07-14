@@ -11,7 +11,7 @@
 |---|---|---|---|---|---|---|
 | Project Management Baseline | M0-001 | `docs/project-management/**` | `README.md`, `.github/**`, `docs/project-management/**` | 文档非空、相对链接与 Reference SHA 校验 | [PR #1](https://github.com/vvitem/item_all/pull/1) / `be37cfb` | DONE |
 | ItemAll Scaffold | M0-002 | `docs/superpowers/specs/2026-07-13-m0-002-project-scaffold-design.md` | `main.go`, `app.go`, `internal/buildinfo`, `frontend/src`, `build`, `wails.json` | `app_test.go`, `internal/buildinfo/info_test.go`, `frontend/src/App.test.tsx`；Actions `29242978948`、`29243245959`、`29244060195`、`29244941752` | [Issue #2](https://github.com/vvitem/item_all/issues/2) / [PR #6](https://github.com/vvitem/item_all/pull/6) / `dbb104e` | DONE |
-| CI Quality Gates | M0-003 | `docs/superpowers/specs/2026-07-13-m0-003-ci-gates-design.md` | `.github/workflows/ci.yml`, `scripts/ci`, `docs/development/ci.md` | `scripts/ci/*_test.go`；Go/Frontend checks；Binding/lock drift；Gitleaks；Windows Wails build/smoke；GREEN Run `29312670714` | [Issue #7](https://github.com/vvitem/item_all/issues/7) / [PR #11](https://github.com/vvitem/item_all/pull/11) | IN_REVIEW |
+| CI Quality Gates | M0-003 | `docs/superpowers/specs/2026-07-13-m0-003-ci-gates-design.md` | `.github/workflows/ci.yml`, `scripts/ci`, `docs/development/ci.md` | `scripts/ci/*_test.go`；Go/Frontend checks；Binding/lock drift；Gitleaks；Windows Wails build/smoke；GREEN `29312670714`；RED `29313493020`；恢复 GREEN `29313730163` | [Issue #7](https://github.com/vvitem/item_all/issues/7) / [PR #11](https://github.com/vvitem/item_all/pull/11) | IN_REVIEW |
 | SSH-01/02/10 | M1-005 | tool-contracts.md | 建议：internal/ssh/tools | 建议：internal/ssh/tools/*_test.go | 待创建 | NOT_STARTED |
 | SSH-03/04 | M1-006 | tool-contracts.md | 建议：internal/ssh/tools | 建议：path_boundary_test.go | 待创建 | NOT_STARTED |
 | SSH-05/06 | M1-007 | tool-contracts.md | 建议：internal/ssh/tools | 建议：service_process_test.go | 待创建 | NOT_STARTED |
@@ -25,4 +25,4 @@
 | Credential Safety | M0-006 | security-and-threat-model.md | 建议：internal/security | 建议：credential_leak_test.go | 待创建 | NOT_STARTED |
 | Windows Beta | M4-005/007 | testing-strategy.md | 建议：.github/workflows,e2e/windows | 建议：e2e/windows | 待创建 | NOT_STARTED |
 
-未合并实现的路径可以在追踪表中记录，但只有合并后才能将状态更新为 `DONE`。M0-003 已有完整 GREEN 基线，仍需 RED→GREEN 证明、合并 Commit 和 Branch Protection 证据，因此保持 `IN_REVIEW`。
+未合并实现的路径可以在追踪表中记录，但只有合并后才能将状态更新为 `DONE`。M0-003 已完成受控 RED→GREEN，仍需最终 GREEN、合并 Commit 和 Branch Protection 证据，因此保持 `IN_REVIEW`。
