@@ -27,7 +27,8 @@
 - 实现 PR：[PR #11](https://github.com/vvitem/item_all/pull/11)。
 - 三个稳定 Job：`quality`、`generated-and-security`、`windows-build`。
 - GREEN 基线：Actions Run `29312670714` 三个 Job 全部成功。
-- 当前剩余工作：受控 RED→GREEN 证明、整分支代码审查、合并与 Branch Protection 自举。
+- RED→GREEN 证明：RED Run `29313493020`、GREEN Run `29313730163`。
+- 当前剩余工作：整分支代码审查、最终全量 GREEN、合并与 Branch Protection 自举。
 - 在 M0-003 完成前不开始 SSH、数据库或 AI 功能。
 
 ## 最近完成
@@ -40,18 +41,19 @@
 - 建立 Windows Wails production build、EXE 存在性和启动烟测。
 - 修复 Linux Wails Binding 生成造成的文件模式噪声：生成后恢复 `0644`，内容漂移仍严格阻断。
 - 删除所有临时诊断 Workflow，正式分支只保留 `.github/workflows/ci.yml`。
+- 受控提交未格式化 Go Fixture 后，RED Run 仅由 `quality` 的格式门禁失败；安全和 Windows Job 均成功。
+- 删除 Fixture 后，GREEN Run `29313730163` 三个 Job 全部恢复成功。
 
 ## 下一步任务
 
-1. 执行一个唯一、可撤销的 gofmt 失败 Fixture，记录 RED Run。
-2. 删除 Fixture，记录三个 Job 全绿的恢复 Run。
-3. 完成整分支规范与质量复核，将 PR #11 转为 Ready for Review。
-4. 合并后配置 `quality`、`generated-and-security`、`windows-build` 为 `main` required checks。
-5. 通过独立状态同步 PR 将 `M0-003` 更新为 `DONE`；此前 `M0-004` 保持 `NOT_STARTED`。
+1. 完成整分支规范与质量复核，将 PR #11 转为 Ready for Review。
+2. 确认最终 Head 对应的三个 Job 全绿，且无 `red_gate_probe.go` 或临时 Workflow。
+3. 合并后配置 `quality`、`generated-and-security`、`windows-build` 为 `main` required checks。
+4. 通过独立状态同步 PR 将 `M0-003` 更新为 `DONE`；此前 `M0-004` 保持 `NOT_STARTED`。
 
 ## 当前阻塞
 
-无实现阻塞。当前仅剩 M0-003 的验收门：RED→GREEN 证明、最终评审、合并和 Branch Protection 自举。
+无实现阻塞。当前仅剩 M0-003 的最终评审、合并和 Branch Protection 自举。
 
 ## 高风险事项
 
@@ -78,7 +80,9 @@
 - `generated-and-security`：固定工具安装、实际 Workflow 自检、三类漂移、完整历史 Gitleaks 全部通过。
 - `windows-build`：Go tests、Wails build、非空 `ItemAll.exe` 和启动烟测通过。
 - GREEN 基线：Actions Run `29312670714`。
-- RED→GREEN 受控门禁证明：尚待执行。
+- 文档同步 GREEN：Actions Run `29313298880`。
+- RED Run `29313493020`：只有 `quality → Verify Go module and formatting` 失败；另外两个 Job 成功。
+- GREEN Run `29313730163`：删除受控 Fixture 后三个 Job 全部成功。
 
 ## 相关代码路径
 
@@ -95,7 +99,8 @@
 - [PR #10](https://github.com/vvitem/item_all/pull/10)：M0-003 实现计划，已合并。
 - [PR #11](https://github.com/vvitem/item_all/pull/11)：M0-003 实现，当前 `IN_REVIEW`。
 - GREEN 基线：Actions Run `29312670714`。
+- RED→GREEN：Actions Run `29313493020` → `29313730163`。
 
 ## 本周可演示结果
 
-任意 Pull Request 可并行获得 Go/Frontend 质量反馈、生成与安全边界检查以及 Windows Wails 构建事实；失败 Job 会以非零退出码阻断合并，不依赖仓库 Secret 或写权限。
+任意 Pull Request 可并行获得 Go/Frontend 质量反馈、生成与安全边界检查以及 Windows Wails 构建事实；受控失败已证明未格式化 Go 会阻断 `quality`，且恢复后三个 Job 全部转绿。
