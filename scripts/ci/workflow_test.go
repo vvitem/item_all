@@ -15,6 +15,20 @@ func TestWorkflowPolicyAcceptsLayeredBaseline(t *testing.T) {
 	}
 }
 
+func TestWorkflowPolicyAcceptsNamedActionStep(t *testing.T) {
+	root := dependencyFixture(t)
+	named := strings.Replace(validWorkflowFixture,
+		"      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
+		"      - name: Checkout\n        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
+		1,
+	)
+	writeFixture(t, filepath.Join(root, ".github", "workflows", "ci.yml"), named)
+
+	if violations := checkWorkflow(root); len(violations) != 0 {
+		t.Fatalf("expected named action step to be valid, got %s", violations.Error())
+	}
+}
+
 func TestWorkflowPolicyRejectsMutableActionTag(t *testing.T) {
 	root := dependencyFixture(t)
 	invalid := strings.Replace(validWorkflowFixture,
@@ -30,6 +44,14 @@ func TestWorkflowPolicyRejectsMutableActionTag(t *testing.T) {
 func TestWorkflowPolicyRejectsWritePermission(t *testing.T) {
 	root := dependencyFixture(t)
 	invalid := strings.Replace(validWorkflowFixture, "contents: read", "contents: write", 1)
+	writeFixture(t, filepath.Join(root, ".github", "workflows", "ci.yml"), invalid)
+
+	assertViolation(t, checkWorkflow(root), "permissions")
+}
+
+func TestWorkflowPolicyRejectsArbitraryWritePermission(t *testing.T) {
+	root := dependencyFixture(t)
+	invalid := strings.Replace(validWorkflowFixture, "contents: read", "contents: read\n  issues: write", 1)
 	writeFixture(t, filepath.Join(root, ".github", "workflows", "ci.yml"), invalid)
 
 	assertViolation(t, checkWorkflow(root), "permissions")
