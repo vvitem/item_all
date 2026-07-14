@@ -13,6 +13,15 @@ func TestBoundaryPolicyAcceptsMinimalApplication(t *testing.T) {
 	}
 }
 
+func TestBoundaryPolicyAcceptsJavaScriptLineComment(t *testing.T) {
+	root := boundaryFixture(t)
+	writeFixture(t, filepath.Join(root, "frontend", "src", "comment.ts"), "// local implementation note\nexport const ready = true\n")
+
+	if violations := checkBoundary(root); len(violations) != 0 {
+		t.Fatalf("expected line comment to be valid, got %s", violations.Error())
+	}
+}
+
 func TestBoundaryPolicyRejectsPrivateKeyFile(t *testing.T) {
 	root := boundaryFixture(t)
 	writeFixture(t, filepath.Join(root, "test.key"), "not-a-real-key")
@@ -23,6 +32,13 @@ func TestBoundaryPolicyRejectsPrivateKeyFile(t *testing.T) {
 func TestBoundaryPolicyRejectsRemoteFrontendResource(t *testing.T) {
 	root := boundaryFixture(t)
 	writeFixture(t, filepath.Join(root, "frontend", "src", "styles.css"), `@import url("https://example.invalid/font.css");`)
+
+	assertViolation(t, checkBoundary(root), "remote-resource")
+}
+
+func TestBoundaryPolicyRejectsProtocolRelativeFrontendResource(t *testing.T) {
+	root := boundaryFixture(t)
+	writeFixture(t, filepath.Join(root, "frontend", "src", "loader.ts"), `const source = "//cdn.example.invalid/app.js"`)
 
 	assertViolation(t, checkBoundary(root), "remote-resource")
 }
