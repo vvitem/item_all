@@ -28,6 +28,20 @@ func TestDependencyPolicyRejectsFloatingNPMVersion(t *testing.T) {
 	assertViolation(t, violations, "npm-exact-version")
 }
 
+func TestDependencyPolicyRejectsAdditionalWorkspacePackage(t *testing.T) {
+	root := dependencyFixture(t)
+	writeFixture(t, filepath.Join(root, "frontend", "pnpm-workspace.yaml"), `packages:
+  - .
+  - ../unreviewed-package
+
+allowBuilds:
+  esbuild: true
+`)
+
+	violations := checkDependencies(root)
+	assertViolation(t, violations, "pnpm-packages")
+}
+
 func TestDependencyPolicyRejectsAdditionalBuildScriptAuthorization(t *testing.T) {
 	root := dependencyFixture(t)
 	writeFixture(t, filepath.Join(root, "frontend", "pnpm-workspace.yaml"), `packages:
