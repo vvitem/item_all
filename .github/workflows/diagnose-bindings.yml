@@ -74,9 +74,20 @@ jobs:
         shell: bash
         run: GOFLAGS='-tags=webkit2_41' wails generate module
 
+      - name: Capture binding drift
+        shell: bash
+        run: |
+          git diff --summary -- frontend/wailsjs > binding-diff-summary.txt
+          git diff --binary -- frontend/wailsjs > binding-diff.patch
+          git status --short -- frontend/wailsjs > binding-status.txt
+
       - name: Upload generated bindings
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: generated-wailsjs-diagnostic
-          path: frontend/wailsjs
+          path: |
+            frontend/wailsjs
+            binding-diff-summary.txt
+            binding-diff.patch
+            binding-status.txt
           retention-days: 1
