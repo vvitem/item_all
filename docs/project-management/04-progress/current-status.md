@@ -26,9 +26,10 @@
 - `M0-003`：正式分层 CI 门禁已实现，状态 `IN_REVIEW`。
 - 实现 PR：[PR #11](https://github.com/vvitem/item_all/pull/11)。
 - 三个稳定 Job：`quality`、`generated-and-security`、`windows-build`。
-- GREEN 基线：Actions Run `29312670714` 三个 Job 全部成功。
+- GREEN 基线：Actions Run `29312670714` 三个 Job全部成功。
 - RED→GREEN 证明：RED Run `29313493020`、GREEN Run `29313730163`。
-- 当前剩余工作：整分支代码审查、最终全量 GREEN、合并与 Branch Protection 自举。
+- 代码审查回归：RED Run `29314236649`、修复 GREEN Run `29314452432`。
+- 当前剩余工作：最终 Head 全量 GREEN、PR 转 Ready、合并与 Branch Protection 自举。
 - 在 M0-003 完成前不开始 SSH、数据库或 AI 功能。
 
 ## 最近完成
@@ -43,17 +44,19 @@
 - 删除所有临时诊断 Workflow，正式分支只保留 `.github/workflows/ci.yml`。
 - 受控提交未格式化 Go Fixture 后，RED Run 仅由 `quality` 的格式门禁失败；安全和 Windows Job 均成功。
 - 删除 Fixture 后，GREEN Run `29313730163` 三个 Job 全部恢复成功。
+- 整分支代码审查发现并修复：普通 JavaScript `// comment` 远程资源误报，以及额外 pnpm workspace 路径未被拒绝。
+- 新增回归测试先在 Run `29314236649` 失败，最小修复后 Run `29314452432` 三个 Job 全部成功。
 
 ## 下一步任务
 
-1. 完成整分支规范与质量复核，将 PR #11 转为 Ready for Review。
-2. 确认最终 Head 对应的三个 Job 全绿，且无 `red_gate_probe.go` 或临时 Workflow。
+1. 确认状态文档收尾后的最终 Head 三个 Job 全绿，且无 `red_gate_probe.go` 或临时 Workflow。
+2. 将 PR #11 转为 Ready for Review并执行合并门检查。
 3. 合并后配置 `quality`、`generated-and-security`、`windows-build` 为 `main` required checks。
 4. 通过独立状态同步 PR 将 `M0-003` 更新为 `DONE`；此前 `M0-004` 保持 `NOT_STARTED`。
 
 ## 当前阻塞
 
-无实现阻塞。当前仅剩 M0-003 的最终评审、合并和 Branch Protection 自举。
+无实现阻塞。当前仅剩 M0-003 的最终 Head 验证、合并和 Branch Protection 自举。
 
 ## 高风险事项
 
@@ -83,6 +86,8 @@
 - 文档同步 GREEN：Actions Run `29313298880`。
 - RED Run `29313493020`：只有 `quality → Verify Go module and formatting` 失败；另外两个 Job 成功。
 - GREEN Run `29313730163`：删除受控 Fixture 后三个 Job 全部成功。
+- 审查 RED Run `29314236649`：新增策略回归测试在旧实现上失败。
+- 审查 GREEN Run `29314452432`：修复后新增测试与三个 Job 全部成功。
 
 ## 相关代码路径
 
@@ -100,7 +105,8 @@
 - [PR #11](https://github.com/vvitem/item_all/pull/11)：M0-003 实现，当前 `IN_REVIEW`。
 - GREEN 基线：Actions Run `29312670714`。
 - RED→GREEN：Actions Run `29313493020` → `29313730163`。
+- 代码审查 RED→GREEN：Actions Run `29314236649` → `29314452432`。
 
 ## 本周可演示结果
 
-任意 Pull Request 可并行获得 Go/Frontend 质量反馈、生成与安全边界检查以及 Windows Wails 构建事实；受控失败已证明未格式化 Go 会阻断 `quality`，且恢复后三个 Job 全部转绿。
+任意 Pull Request 可并行获得 Go/Frontend 质量反馈、生成与安全边界检查以及 Windows Wails 构建事实；受控失败和代码审查回归均已通过 RED→GREEN 证明门禁有效。
