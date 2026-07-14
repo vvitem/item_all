@@ -106,10 +106,12 @@ func checkPNPMWorkspace(root string, violations *Violations) {
 		violations.Add("frontend/pnpm-workspace.yaml", "pnpm-workspace-readable", err.Error())
 		return
 	}
-	if !strings.Contains(text, "packages:\n  - .") {
-		violations.Add("frontend/pnpm-workspace.yaml", "pnpm-packages", "workspace must contain only the frontend package root")
-	}
 	lines := strings.Split(text, "\n")
+	packages := parseYAMLListSection(lines, "packages:")
+	if len(packages) != 1 || packages[0] != "." {
+		violations.Add("frontend/pnpm-workspace.yaml", "pnpm-packages", "packages must contain only the frontend package root: .")
+	}
+
 	inAllowBuilds := false
 	allowed := map[string]bool{}
 	for _, line := range lines {
@@ -135,4 +137,28 @@ func checkPNPMWorkspace(root string, violations *Violations) {
 	if len(allowed) != 1 || !allowed["esbuild"] {
 		violations.Add("frontend/pnpm-workspace.yaml", "pnpm-allow-builds", "allowBuilds must contain only esbuild: true")
 	}
+}
+
+func parseYAMLListSection(lines []string, header string) []string {
+	inSection := false
+	values := []string{}
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == header {
+			inSection = true
+			continue
+		}
+		if !inSection {
+			continue
+		}
+		if trimmed == "" {
+			continue
+		}
+		if !strings.HasPrefix(line, "  - ") {
+			break
+		}
+		value := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), "-"))
+		values = append(values, value)
+	}
+	return values
 }
