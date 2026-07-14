@@ -28,10 +28,10 @@
 - 定位并修复两类 Runner 差异：前端产物必须先生成供 `go:embed` 使用；Wails Linux 生成 Binding 后需恢复普通文件模式 `0644`。
 - 删除所有临时 Binding 诊断 Workflow，最终只保留正式 `.github/workflows/ci.yml`。
 - Actions Run `29312670714` 的三个 Job 全部通过。
+- 完成受控 RED→GREEN：RED Run `29313493020` 仅在 Go 格式门禁失败；删除 Fixture 后 GREEN Run `29313730163` 三个 Job 全部成功。
 
 ### 未完成
 
-- 受控 gofmt RED→GREEN 门禁证明尚未执行。
 - PR #11 尚未完成整分支评审和合并。
 - `main` Branch Protection required checks 尚未自举。
 - SQLite、Keychain、Operation Bus、SSH、数据库和 AI 均未开始。
@@ -39,6 +39,9 @@
 ### 测试与证据
 
 - Actions Run `29312670714`：`quality`、`generated-and-security`、`windows-build` 全部成功。
+- Actions Run `29313298880`：文档和状态同步后的三个 Job 全部成功。
+- RED Run `29313493020`：`quality` 在 `Verify Go module and formatting` 失败；`generated-and-security` 与 `windows-build` 成功。
+- GREEN Run `29313730163`：删除 `red_gate_probe.go` 后三个 Job 全部成功。
 - `quality`：CI Policy tests、Go format/vet/test/race、5 个 Vitest、TypeScript、ESLint 和 Vite build 通过。
 - `generated-and-security`：固定工具、实际 Workflow 自检、依赖政策、仓库边界、Binding/Go Module/pnpm Lockfile 漂移和完整历史 Gitleaks 通过。
 - `windows-build`：Go tests、Wails production build、非空 `ItemAll.exe` 和 10 秒启动烟测通过。
@@ -46,15 +49,14 @@
 
 ### 风险/阻塞
 
-无外部阻塞。当前验收风险是必须证明门禁在受控失败时确实阻断，并在合并后正确配置三个 required checks。
+无外部阻塞。当前验收风险只剩合并后正确配置三个 required checks，并用状态同步 PR 验证保护规则。
 
 ### 本周下一步
 
-1. 完成 gofmt 受控 RED Run 并记录唯一失败步骤。
-2. 删除 Fixture，完成恢复 GREEN Run。
-3. 完成 PR #11 整分支审查并合并。
-4. 配置 `main` required checks，并通过状态同步 PR 验证。
-5. M0-003 关闭前不启动 M0-004 或业务能力。
+1. 完成 PR #11 整分支审查并合并。
+2. 配置 `main` required checks，并通过状态同步 PR 验证。
+3. 状态同步完成后将 M0-003 更新为 `DONE`、M0-004 更新为 `READY`。
+4. M0-003 关闭前不启动 M0-004 或业务能力。
 
 ## 2026-W28（第 1 周）
 
