@@ -187,7 +187,7 @@ jobs:
       - name: Install exact Gitleaks CLI
         shell: bash
         run: |
-          go install "github.com/gitleaks/gitleaks/v8@${GITLEAKS_VERSION}"
+          go install "github.com/zricethezav/gitleaks/v8@${GITLEAKS_VERSION}"
           gitleaks version
 
       - name: Install frontend dependencies
