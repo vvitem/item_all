@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-var remoteResource = regexp.MustCompile(`(?i)(https?:)?//[^\s"')]+`)
+var absoluteRemoteResource = regexp.MustCompile(`(?i)https?://[^\s"')>]+`)
+var protocolRelativeResource = regexp.MustCompile(`(?i)["'(=][ \t]*//[a-z0-9][a-z0-9.-]*(:[0-9]+)?(/[^\s"')>]*)?`)
 var bindingExport = regexp.MustCompile(`(?m)^export function ([A-Za-z0-9_]+)\(`)
 
 func checkBoundary(root string) Violations {
@@ -62,7 +63,7 @@ func checkBoundary(root string) Violations {
 				violations.Add(rel, "source-readable", err.Error())
 				return nil
 			}
-			if shouldScanFrontend(rel) && remoteResource.MatchString(text) {
+			if shouldScanFrontend(rel) && containsRemoteResource(text) {
 				violations.Add(rel, "remote-resource", "frontend source must not load remote scripts, styles, fonts, or CDN resources")
 			}
 			if shouldScanSource(rel) {
@@ -89,6 +90,10 @@ func checkBoundary(root string) Violations {
 	})
 	checkBindings(root, &violations)
 	return violations
+}
+
+func containsRemoteResource(text string) bool {
+	return absoluteRemoteResource.MatchString(text) || protocolRelativeResource.MatchString(text)
 }
 
 func checkBindings(root string, violations *Violations) {
