@@ -207,6 +207,10 @@ jobs:
         shell: bash
         run: GOFLAGS='-tags=webkit2_41' wails generate module
 
+      - name: Normalise generated binding file modes
+        shell: bash
+        run: find frontend/wailsjs -type f -exec chmod 0644 {} +
+
       - name: Verify Go module drift
         shell: bash
         run: |
