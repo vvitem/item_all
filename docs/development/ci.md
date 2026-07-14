@@ -160,6 +160,8 @@ Job ID 和显示名称进入保护规则后不得随意改变。需要重命名�
 
 ## 当前验证证据
 
-- GREEN Run `29312670714`：`quality`、`generated-and-security`、`windows-build` 全部通过。
-- 该 Run 验证了 Go/Frontend 全量检查、真实 Workflow 策略、三类生成漂移、完整历史 Gitleaks、Windows Wails build 和 EXE 启动烟测。
-- 受控 RED→GREEN 证明将在实现 PR 合并前追加到本节。
+- GREEN 基线 Run `29312670714`：`quality`、`generated-and-security`、`windows-build` 全部通过。
+- 文档同步 Run `29313298880`：三个 Job 全部通过，证明文档和项目状态变更也受同一门禁保护。
+- RED Run `29313493020`：提交语法有效但未执行 `gofmt` 的 `scripts/ci/red_gate_probe.go` 后，只有 `quality` 在 `Verify Go module and formatting` 失败；`generated-and-security` 与 `windows-build` 均成功。
+- GREEN Run `29313730163`：删除受控 Fixture 后，三个 Job 全部恢复成功。
+- 最终分支不包含 `red_gate_probe.go`、临时诊断 Workflow、真实 Secret 或范围外业务能力。
