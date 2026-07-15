@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	expectedModule       = "github.com/vvitem/item_all"
-	expectedGoDirective  = "1.26.0"
-	expectedGoToolchain  = "go1.26.5"
-	expectedWailsVersion = "v2.13.0"
-	expectedNodeVersion  = "24.18.0"
-	expectedPNPMVersion  = "11.12.0"
+	expectedModule            = "github.com/vvitem/item_all"
+	expectedGoDirective       = "1.26.0"
+	expectedGoToolchain       = "go1.26.5"
+	expectedWailsVersion      = "v2.13.0"
+	expectedNodeVersion       = "24.18.0"
+	expectedPNPMVersion       = "11.12.0"
+	expectedSQLiteVersion     = "v1.53.0"
+	expectedSQLiteLibcVersion = "v1.73.4"
 )
 
 var exactVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$`)
@@ -52,6 +54,15 @@ func checkGoModule(root string, violations *Violations) {
 		if !strings.Contains(text, token) {
 			violations.Add("go.mod", rule, fmt.Sprintf("expected %q", token))
 		}
+	}
+	checkExactModuleVersion(text, "modernc.org/sqlite", expectedSQLiteVersion, "sqlite-version", violations)
+	checkExactModuleVersion(text, "modernc.org/libc", expectedSQLiteLibcVersion, "sqlite-libc-version", violations)
+}
+
+func checkExactModuleVersion(text, module, version, rule string, violations *Violations) {
+	pattern := regexp.MustCompile(`(?m)^\s*` + regexp.QuoteMeta(module) + `\s+` + regexp.QuoteMeta(version) + `(?:\s+//[^\n]*)?\s*$`)
+	if !pattern.MatchString(text) {
+		violations.Add("go.mod", rule, fmt.Sprintf("expected exact module version %s %s", module, version))
 	}
 }
 

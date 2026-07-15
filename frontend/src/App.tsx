@@ -63,6 +63,23 @@ export default function App({ loadAppInfo = getAppInfo }: AppProps) {
 
   const { info } = state
 
+  if (info.status === 'storage_error') {
+    return (
+      <main className="shell shell--centered">
+        <section role="alert" className="status-card status-card--error">
+          <h1>本地数据存储未能启动</h1>
+          <p>{info.error?.safeMessage ?? '无法打开本地数据存储。'}</p>
+          {info.error?.code ? <code>{info.error.code}</code> : null}
+          <p>
+            {info.error?.retryable
+              ? '请检查目录权限或关闭其他 ItemAll 实例，然后重新启动应用。'
+              : '为保护现有数据，应用不会自动重建数据库。'}
+          </p>
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className="shell">
       <header className="hero">

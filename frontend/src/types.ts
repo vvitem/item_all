@@ -1,3 +1,9 @@
+export interface SafeStorageError {
+  code: string
+  safeMessage: string
+  retryable: boolean
+}
+
 export interface AppInfo {
   name: string
   tagline: string
@@ -6,6 +12,7 @@ export interface AppInfo {
   buildTime: string
   runtime: string
   status: string
+  error?: SafeStorageError
 }
 
 export type LoadAppInfo = () => Promise<AppInfo>
