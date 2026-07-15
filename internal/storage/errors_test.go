@@ -35,3 +35,16 @@ func TestIsCodeTraversesWrappedError(t *testing.T) {
 		t.Fatal("missing code")
 	}
 }
+
+func TestIsCodeTraversesJoinedErrors(t *testing.T) {
+	joined := errors.Join(
+		Wrap(CodeBusy, "busy", errors.New("locked"), true),
+		Wrap(CodeTransactionFailed, "rollback", errors.New("rollback failed"), false),
+	)
+	if !IsCode(joined, CodeBusy) {
+		t.Fatal("missing busy code")
+	}
+	if !IsCode(joined, CodeTransactionFailed) {
+		t.Fatal("missing transaction code")
+	}
+}
