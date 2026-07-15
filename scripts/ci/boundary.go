@@ -48,7 +48,7 @@ func checkBoundary(root string) Violations {
 			}
 			for _, forbidden := range forbiddenPaths {
 				if rel == forbidden || strings.HasPrefix(rel, forbidden+"/") {
-					violations.Add(rel, "scope-directory", "capability is outside M0-003")
+					violations.Add(rel, "scope-directory", "capability is outside the currently approved task scope")
 				}
 			}
 			return nil
@@ -67,29 +67,48 @@ func checkBoundary(root string) Violations {
 				violations.Add(rel, "remote-resource", "frontend source must not load remote scripts, styles, fonts, or CDN resources")
 			}
 			if shouldScanSource(rel) {
-				envTokens := []string{"os.Getenv(", "os.LookupEnv(", "process.env", "import.meta.env"}
-				for _, token := range envTokens {
-					if strings.Contains(text, token) {
-						violations.Add(rel, "environment-read", "application source must not read environment variables in M0-003")
-					}
-				}
-				capabilityTokens := []string{
-					"golang.org/x/crypto/ssh",
-					"database/sql",
-					"github.com/openai/",
-					"go.opentelemetry.io/",
-				}
-				for _, token := range capabilityTokens {
-					if strings.Contains(text, token) {
-						violations.Add(rel, "scope-import", "capability dependency is outside M0-003: "+token)
-					}
-				}
+				checkEnvironmentReads(rel, text, &violations)
+				checkCapabilityImports(rel, text, &violations)
 			}
 		}
 		return nil
 	})
 	checkBindings(root, &violations)
 	return violations
+}
+
+func checkEnvironmentReads(rel, text string, violations *Violations) {
+	sanitized := text
+	if rel == "internal/storage/sqlite/path_linux.go" {
+		sanitized = strings.ReplaceAll(sanitized, `os.LookupEnv("XDG_DATA_HOME")`, "")
+	}
+	for _, token := range []string{"os.Getenv(", "os.LookupEnv(", "process.env", "import.meta.env"} {
+		if strings.Contains(sanitized, token) {
+			violations.Add(rel, "environment-read", "only XDG_DATA_HOME in the Linux storage path resolver is approved")
+		}
+	}
+}
+
+func checkCapabilityImports(rel, text string, violations *Violations) {
+	rules := []struct {
+		token         string
+		allowedPrefix string
+	}{
+		{token: "golang.org/x/crypto/ssh"},
+		{token: "database/sql", allowedPrefix: "internal/storage/"},
+		{token: "modernc.org/sqlite", allowedPrefix: "internal/storage/sqlite/"},
+		{token: "github.com/openai/"},
+		{token: "go.opentelemetry.io/"},
+	}
+	for _, rule := range rules {
+		if !strings.Contains(text, rule.token) {
+			continue
+		}
+		if rule.allowedPrefix != "" && strings.HasPrefix(rel, rule.allowedPrefix) {
+			continue
+		}
+		violations.Add(rel, "scope-import", "capability dependency is outside its approved package boundary: "+rule.token)
+	}
 }
 
 func containsRemoteResource(text string) bool {
