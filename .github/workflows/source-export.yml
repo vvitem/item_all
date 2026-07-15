@@ -9,30 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  export-source:
-    if: github.head_ref == 'feat/m0-004-sqlite-storage'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Archive tracked source
-        shell: bash
-        run: git ls-files -z | tar --null -T - -czf item_all-source.tar.gz
-
-      - name: Upload source artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
-        with:
-          name: item-all-source
-          path: item_all-source.tar.gz
-          if-no-files-found: error
-          retention-days: 1
-
-  export-dev-environment:
+  prepare-sqlite-deps:
     if: github.head_ref == 'feat/m0-004-sqlite-storage'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -50,54 +27,29 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24.18.0'
-
-      - name: Enable exact pnpm
+      - name: Generate exact SQLite module state
         shell: bash
         run: |
-          corepack enable
-          corepack prepare pnpm@11.12.0 --activate
-          test "$(pnpm --version)" = '11.12.0'
+          mkdir -p internal/storage/sqlite
+          cat > internal/storage/sqlite/driver.go <<'EOF'
+          package sqlite
 
-      - name: Populate dependencies
-        shell: bash
-        run: |
-          go mod download
-          pnpm --dir frontend install --frozen-lockfile
+          import _ "modernc.org/sqlite"
+          EOF
+          go get modernc.org/sqlite@v1.53.0
+          go mod edit -require=modernc.org/libc@v1.73.4
+          go mod tidy
+          test "$(go list -m -f '{{.Version}}' modernc.org/sqlite)" = 'v1.53.0'
+          test "$(go list -m -f '{{.Version}}' modernc.org/libc)" = 'v1.73.4'
+          tar -C "$(go env GOPATH)" -czf go-pkg-sqlite.tar.gz pkg
 
-      - name: Archive toolchains and caches
-        shell: bash
-        run: |
-          go_root="$(go env GOROOT)"
-          go_parent="$(dirname "$go_root")"
-          go_name="$(basename "$go_root")"
-          tar -C "$go_parent" -czf go-toolchain.tar.gz "$go_name"
-          tar -C "$(go env GOPATH)" -czf go-pkg.tar.gz pkg
-
-          node_root="$(dirname "$(dirname "$(command -v node)")")"
-          node_parent="$(dirname "$node_root")"
-          node_name="$(basename "$node_root")"
-          tar -C "$node_parent" -czf node-toolchain.tar.gz "$node_name"
-
-          if [[ -d "$HOME/.cache/node/corepack" ]]; then
-            tar -C "$HOME/.cache/node" -czf corepack-cache.tar.gz corepack
-          else
-            tar -czf corepack-cache.tar.gz --files-from /dev/null
-          fi
-          tar -C frontend -czf frontend-node-modules.tar.gz node_modules
-
-      - name: Upload development environment
+      - name: Upload SQLite dependency snapshot
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
-          name: item-all-dev-environment
+          name: item-all-sqlite-deps
           path: |
-            go-toolchain.tar.gz
-            go-pkg.tar.gz
-            node-toolchain.tar.gz
-            corepack-cache.tar.gz
-            frontend-node-modules.tar.gz
+            go.mod
+            go.sum
+            go-pkg-sqlite.tar.gz
           if-no-files-found: error
           retention-days: 1
