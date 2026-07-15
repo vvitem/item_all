@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"log"
 
+	"github.com/vvitem/item_all/internal/storage/sqlite"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -13,7 +15,8 @@ import (
 var assets embed.FS
 
 func main() {
-	app := NewApp()
+	storageRuntime := bootstrapStorage(context.Background(), defaultStorageOpener{}, sqlite.DefaultConfig(""))
+	app := NewApp(storageRuntime.err)
 
 	err := wails.Run(&options.App{
 		Title:     "ItemAll",
@@ -27,6 +30,11 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 2, G: 6, B: 23, A: 1},
 		Bind: []interface{}{
 			app,
+		},
+		OnShutdown: func(context.Context) {
+			if err := storageRuntime.Close(); err != nil {
+				log.Printf("storage shutdown failed: %v", err)
+			}
 		},
 	})
 	if err != nil {
