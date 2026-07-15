@@ -76,6 +76,9 @@ func (s *Store) ExecContext(ctx context.Context, query string, args ...any) (sql
 	if err := s.closedError("execute-sql"); err != nil {
 		return nil, err
 	}
+	if err := transactionContextError(ctx, "reject-store-execute-in-transaction"); err != nil {
+		return nil, err
+	}
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
 	if err := s.closedError("execute-sql"); err != nil {
@@ -93,6 +96,9 @@ func (s *Store) QueryContext(ctx context.Context, query string, args ...any) (*s
 	if err := s.closedError("query-sql"); err != nil {
 		return nil, err
 	}
+	if err := transactionContextError(ctx, "reject-store-query-in-transaction"); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, classifySQLiteError("query-sql", err, storage.CodeTransactionFailed, false)
@@ -103,6 +109,9 @@ func (s *Store) QueryContext(ctx context.Context, query string, args ...any) (*s
 // QueryRowContext returns a row adapter that classifies deferred Scan errors.
 func (s *Store) QueryRowContext(ctx context.Context, query string, args ...any) storage.Row {
 	if err := s.closedError("query-row-sql"); err != nil {
+		return errorRow{err: err}
+	}
+	if err := transactionContextError(ctx, "reject-store-query-row-in-transaction"); err != nil {
 		return errorRow{err: err}
 	}
 	return sqlRow{row: s.db.QueryRowContext(ctx, query, args...), operation: "query-row-sql"}
