@@ -15,6 +15,46 @@ func TestDependencyPolicyAcceptsRepositoryBaseline(t *testing.T) {
 	}
 }
 
+func TestDependencyPolicyRequiresExactSQLiteVersions(t *testing.T) {
+	root := dependencyFixture(t)
+	if violations := checkDependencies(root); len(violations) != 0 {
+		t.Fatalf("expected exact SQLite versions, got %s", violations.Error())
+	}
+}
+
+func TestDependencyPolicyRejectsSQLiteVersionDrift(t *testing.T) {
+	root := dependencyFixture(t)
+	text, err := readText(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text = strings.Replace(text, "modernc.org/sqlite v1.53.0", "modernc.org/sqlite v1.52.0", 1)
+	writeFixture(t, filepath.Join(root, "go.mod"), text)
+	assertViolation(t, checkDependencies(root), "sqlite-version")
+}
+
+func TestDependencyPolicyRejectsSQLiteVersionSuffixDrift(t *testing.T) {
+	root := dependencyFixture(t)
+	text, err := readText(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text = strings.Replace(text, "modernc.org/sqlite v1.53.0", "modernc.org/sqlite v1.53.0-evil", 1)
+	writeFixture(t, filepath.Join(root, "go.mod"), text)
+	assertViolation(t, checkDependencies(root), "sqlite-version")
+}
+
+func TestDependencyPolicyRejectsSQLiteLibcVersionDrift(t *testing.T) {
+	root := dependencyFixture(t)
+	text, err := readText(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text = strings.Replace(text, "modernc.org/libc v1.73.4", "modernc.org/libc v1.73.3", 1)
+	writeFixture(t, filepath.Join(root, "go.mod"), text)
+	assertViolation(t, checkDependencies(root), "sqlite-libc-version")
+}
+
 func TestDependencyPolicyRejectsFloatingNPMVersion(t *testing.T) {
 	root := dependencyFixture(t)
 	writeFixture(t, filepath.Join(root, "frontend", "package.json"), `{
@@ -80,7 +120,11 @@ go 1.26.0
 
 toolchain go1.26.5
 
-require github.com/wailsapp/wails/v2 v2.13.0
+require (
+	github.com/wailsapp/wails/v2 v2.13.0
+	modernc.org/sqlite v1.53.0
+	modernc.org/libc v1.73.4 // indirect
+)
 `)
 	writeFixture(t, filepath.Join(root, ".nvmrc"), "24.18.0\n")
 	writeFixture(t, filepath.Join(root, "frontend", "package.json"), `{
