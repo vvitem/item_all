@@ -13,6 +13,16 @@ const readyInfo: AppInfo = {
   status: 'ready',
 }
 
+const storageErrorInfo: AppInfo = {
+  ...readyInfo,
+  status: 'storage_error',
+  error: {
+    code: 'storage_permission_denied',
+    safeMessage: '无法访问本地数据目录，请检查目录权限。',
+    retryable: true,
+  },
+}
+
 describe('App', () => {
   it('shows loading while app information is pending', () => {
     const pending = new Promise<AppInfo>(() => undefined)
@@ -32,6 +42,16 @@ describe('App', () => {
     expect(screen.getByText('2026-07-13T08:00:00Z')).toBeInTheDocument()
     expect(screen.getByText('go1.26.5 windows/amd64')).toBeInTheDocument()
     expect(screen.getByText('运行正常')).toBeInTheDocument()
+  })
+
+  it('shows a safe fail-closed storage startup state', async () => {
+    render(<App loadAppInfo={async () => storageErrorInfo} />)
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('本地数据存储未能启动')
+    expect(alert).toHaveTextContent('无法访问本地数据目录，请检查目录权限。')
+    expect(alert).toHaveTextContent('storage_permission_denied')
+    expect(alert).not.toHaveTextContent(/Users|itemall\.db|SQLITE_/i)
   })
 
   it('shows a safe error without exposing an asynchronous rejection', async () => {
