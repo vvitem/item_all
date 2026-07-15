@@ -45,10 +45,26 @@ func Wrap(code Code, operation string, cause error, retryable bool) error {
 	return &Error{Code: code, Operation: operation, Retryable: retryable, Cause: cause}
 }
 
-// IsCode reports whether err contains a classified storage error with code.
+// IsCode reports whether any branch of err contains a classified storage error with code.
 func IsCode(err error, code Code) bool {
-	var storageErr *Error
-	return errors.As(err, &storageErr) && storageErr.Code == code
+	if err == nil {
+		return false
+	}
+	if storageErr, ok := err.(*Error); ok && storageErr.Code == code {
+		return true
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		for _, child := range joined.Unwrap() {
+			if IsCode(child, code) {
+				return true
+			}
+		}
+		return false
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return IsCode(wrapped.Unwrap(), code)
+	}
+	return false
 }
 
 // SafeError is the only storage error representation allowed across UI boundaries.
