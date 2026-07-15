@@ -1,5 +1,5 @@
 export namespace main {
-	
+
 	export class AppInfo {
 	    name: string;
 	    tagline: string;
@@ -9,11 +9,11 @@ export namespace main {
 	    runtime: string;
 	    status: string;
 	    error?: storage.SafeError;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new AppInfo(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
@@ -25,7 +25,7 @@ export namespace main {
 	        this.status = source["status"];
 	        this.error = this.convertValues(source["error"], storage.SafeError);
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -48,16 +48,16 @@ export namespace main {
 }
 
 export namespace storage {
-	
+
 	export class SafeError {
 	    code: string;
 	    safeMessage: string;
 	    retryable: boolean;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new SafeError(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.code = source["code"];
